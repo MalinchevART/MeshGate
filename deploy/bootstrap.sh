@@ -9,7 +9,7 @@
 #   Linux/macOS:        install-linux.sh (add --service for systemd)
 set -euo pipefail
 
-REPO="${MESHGATE_REPO:-https://github.com/nmalinchev-nlm/meshgate.git}"
+REPO="${MESHGATE_REPO:-https://github.com/nmalinchev-nlm/MeshGate.git}"
 DIR="${MESHGATE_DIR:-$HOME/meshgate}"
 
 # already inside the repo?  (a deploy/ directory with docker-compose.yml)
