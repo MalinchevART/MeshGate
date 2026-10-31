@@ -18,7 +18,7 @@ Meshtastic nodes (LoRa radios) speak over MQTT. MeshGate **listens, decodes, sho
 | **Windows one-click** / двоен клик | `deploy\start-meshgate.cmd` — checks → installs → starts → opens the UI → watchdog loop / проверява → инсталира → стартира → отваря браузъра → държи guard-loop | day-to-day operation / всекидневна работа |
 | **Windows .exe** | `MeshGate-installer-*.exe` (self-extracting; built by / строи се с `deploy/make-installer.sh`) | hand-over as a single file / предаване като един файл |
 | **Linux one command** / една команда | `bash deploy/install-linux.sh` (add / с `--service` → systemd auto-start on boot) | servers / Raspberry Pi |
-| **Fresh machine / нова машина** | `curl -fsSL https://raw.githubusercontent.com/nmalinchev-nlm/MeshGate/main/deploy/bootstrap.sh \| bash` | zero-git-knowledge setup |
+| **Fresh machine / нова машина** | `curl -fsSL https://raw.githubusercontent.com/MalinchevART/MeshGate/main/deploy/bootstrap.sh \| bash` | zero-git-knowledge setup |
 
 Requirements / Изисквания: Windows 10/11 or Linux, 4 GB RAM, Git, Docker Desktop (Windows) / Docker Engine (Linux) — the installers set these up if missing / инсталаторите ги донастройват, ако липсват.
 
