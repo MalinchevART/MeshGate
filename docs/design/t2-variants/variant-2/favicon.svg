@@ -1,0 +1,20 @@
+<!-- MeshGate — Т2 Вариант 2: favicon = само символът „Mesh Triangle".
+     Статичен актив, независим от React и от CSS каскадата на приложението —
+     затова цветът е literal #22D3D9 (= --accent-primary), а не var().
+     Дестинация при внедряване: apps/web/public/favicon.svg (Vite сервира
+     public/ от корена → /favicon.svg). Пътищата са 1:1 от мастъра. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="22 33 194 143" width="64" height="64">
+  <title>MeshGate</title>
+  <g fill="none" stroke="#22D3D9" stroke-width="12" stroke-linecap="square">
+    <path d="M35 166 L102 48 L170 166" />
+    <path d="M73 166 L137 58 L202 166" />
+  </g>
+  <path d="M73 119 L48 166 M73 119 L102 166" fill="none" stroke="#22D3D9" stroke-width="4" />
+  <g fill="#22D3D9">
+    <circle cx="102" cy="48" r="8" />
+    <circle cx="137" cy="58" r="7" />
+    <circle cx="73" cy="119" r="10" />
+    <circle cx="170" cy="166" r="7" />
+    <circle cx="202" cy="166" r="7" />
+  </g>
+</svg>

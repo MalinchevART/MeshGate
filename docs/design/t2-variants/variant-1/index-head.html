@@ -1,0 +1,24 @@
+<!-- == MeshGate, фаза T2, Вариант 1 „Статични активи" =====================
+     Фрагмент за <head> на apps/web/index.html (постави след <title>).
+
+     Преди това копирай в apps/web/public/:
+       - favicon.svg   -> apps/web/public/favicon.svg
+       - logo-full.svg -> apps/web/public/logo-full.svg
+     (Vite сервира public/ в корена без обработка: /favicon.svg, /logo-full.svg.)
+========================================================================== -->
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" sizes="any" />
+<meta name="theme-color" content="#07131F" />
+
+<!-- Бележки (да не се копират в index.html):
+  * rel="icon" type="image/svg+xml": поддържан от Chrome/Edge/Firefox и
+    настолно Safari; по-старите браузъри тихо го пропускат — при нужда от
+    исторически фолбък се добавя 32x32 PNG преди SVG тага:
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+  * apple-touch-icon НЕ е включен: iOS изисква PNG (180x180) и не поддържа
+    SVG икони. Ако някой «Запази на началния екран» преди това да е важно,
+    рендирай favicon.svg към PNG и добави:
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  * rel="mask-icon" (Safari pinned tabs) пропуснат: изисква монохромен
+    еднопътен SVG — нашият символ е многослойен; не си струва.
+  * theme-color #07131F = --bg-canvas: оцветява chrome-а на мобилен браузър
+    около приложението; без ефект на десктоп. -->

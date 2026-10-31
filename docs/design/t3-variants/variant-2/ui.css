@@ -1,0 +1,564 @@
+/* ============================================================================
+   MeshGate · Т3 „Базови компоненти" — Вариант 2 „Платформени примитиви"
+   ============================================================================
+   Дестинация при внедряване: apps/web/src/styles.css — всеки блок по-долу се
+   вмъква КАТО ПОДБЛОК „Т3" в едноименната СЪЩЕСТВУВАЩА секция (правилото на
+   системата: следващите фази ДОБАВЯТ, не пренаписват):
+
+     · 4.2 CARDS & METRICS  ← .mg-card / .mg-card-grid / .mg-tone--*
+     · 4.3 PANEL            ← .mg-panel (+ fullscreen) / .mg-icon-btn
+     · 4.5 TAGS & CHIPS     ← .mg-chip (тонове, flat, sm, mono)
+     · 4.7 MODAL / DRAWER   ← .mg-modal-back / .mg-modal / .mg-drawer-back /
+                               .mg-drawer / .mg-dialog__*
+     · 4.8 FEEDBACK         ← .mg-toasts / .mg-toast / .mg-live (+ пулс)
+
+   Префиксът mg- е съзнателен: компонентите на В2 живеят РЕДОВНО до старите
+   .card/.panel/.chip/.modal по време на поетапната миграция (Т6→Т32) —
+   така CSS-ът се пуска в styles.css без нито един конфликт с легасите класове.
+
+   Правила (без изключения): само токени — НУЛА нови hex; тинтове през
+   color-mix(in srgb, var(--…) N%, transparent); нищо под 12px; БЕЗ сенки;
+   1px граници var(--border-default); radius 4/8/12 (чип 4 / карта+панел+toast
+   8 / модал 12); tabular-nums за числа; .mono за ID/topic.
+
+   Z-стълба (документирана, за да не се измисля в Т6/Т14):
+     топбар 5 (Т1) < панел цял екран 8 < модал/дравер 10 < toast 20.
+   ========================================================================== */
+
+/* ==========================================================================
+   4.2 CARDS & METRICS · подблок Т3 — MetricCard (В2)
+      KPI картата: flex колона + min-height → еднаква височина в grid ред;
+      контекст редът е pinned долу (margin-top: auto). Типографията идва от
+      Т1 класовете .metric-label / .metric-value (12 uppercase muted /
+      24·600 tabular-nums) — тук само подредба.
+   ========================================================================== */
+
+/* grid-ред за KPI (Т9): auto-fit → без media queries; дефиниран тук, за да
+   не зависи Т9 от легаси .cards; картите се разпъват на еднаква височина
+   (align-items: stretch по подразбиране в grid) */
+.mg-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.mg-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 104px; /* label(12) + value(24·1.3) + context(12·1.6) + номера */
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default); /* тънка граница, БЕЗ сянка */
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.mg-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.mg-card__icon {
+  font-size: var(--fs-14);
+  line-height: var(--lh-tight);
+  flex: none;
+}
+.mg-card__label {
+  overflow-wrap: anywhere; /* дълги имена не чупят колоната */
+}
+.mg-card__value {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.mg-card__value--mono {
+  font-family: var(--font-mono); /* fs остава 24 от .metric-value */
+}
+/* контекст ред: 12px muted, ЗАКОТВЕН долу → в grid реда всички карти са
+   еднакво високи и контекстите се изравняват */
+.mg-card__context {
+  margin-top: auto;
+  padding-top: var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  line-height: var(--lh-loose);
+  overflow-wrap: anywhere;
+}
+
+.mg-card--center {
+  text-align: center;
+}
+.mg-card--center .mg-card__head {
+  justify-content: center;
+}
+
+/* тон → цвят на СТОЙНОСТТА (и иконата); споделен с чиповете по-долу */
+.mg-tone--success { color: var(--status-success); }
+.mg-tone--warning { color: var(--status-warning); }
+.mg-tone--danger  { color: var(--status-danger); }
+.mg-tone--info    { color: var(--status-info); }
+.mg-tone--accent  { color: var(--accent-primary); }
+/* neutral = наследява text-primary → няма правило */
+
+/* ==========================================================================
+   4.3 PANEL · подблок Т3 — Panel със слотове + цял екран (В2)
+      head = лента със заглавие + tools (filters/actions/⛶); тялото е
+      отделено с 1px граница. Sticky head: залепя се под топбара (52px,
+      константата на shell-а от Т1 §4.1) при скрол на страницата; в цял
+      екран тялото скролва и head стои естествено (flex).
+   ========================================================================== */
+
+.mg-panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default); /* тънка граница, БЕЗ сянка */
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+  min-width: 0;
+}
+
+.mg-panel__head {
+  position: sticky;
+  top: 52px; /* височината на топбара (Т1 §4.1) */
+  z-index: 1; /* под топбара (z 5), над редовете на тялото */
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+.mg-panel__heading {
+  min-width: 0;
+  margin-right: auto; /* избутва tools надясно */
+}
+.mg-panel__title {
+  margin: 0; /* отменя margin-а на .panel-title от Т1 §3.4 — в лента сме */
+  overflow-wrap: anywhere;
+}
+.mg-panel__subtitle {
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  line-height: var(--lh-loose);
+}
+.mg-panel__tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.mg-panel__filters,
+.mg-panel__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.mg-panel__filters input,
+.mg-panel__filters select {
+  min-width: 0;
+  width: 180px; /* филтърът в header е компактен; дългите полета — в тялото */
+}
+
+.mg-panel__body {
+  padding: var(--space-4);
+  min-height: 0;
+}
+.mg-panel--flush .mg-panel__body {
+  padding: 0; /* edge-to-edge таблици (Т12): редовете докосват границата */
+}
+
+/* цял екран (⛶ / Esc): НАД топбара (z 5), ПОД модалите (z 10) */
+.mg-panel--fs {
+  position: fixed;
+  inset: 0;
+  z-index: 8;
+  margin: 0;
+  border-radius: 0;
+}
+.mg-panel--fs .mg-panel__head {
+  top: 0;
+  border-radius: 0;
+}
+.mg-panel--fs .mg-panel__body {
+  flex: 1;
+  overflow: auto; /* тялото скролва, head стои закрепен (flex колона) */
+}
+
+/* малък иконо-бутон (⛶ / ✕) — изрично отменя глобалния accent `button`
+   от Т1 §4.6, за да е неутрален в лентата на панела и на диалога */
+.mg-icon-btn {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--fs-13);
+  line-height: var(--lh-tight);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+}
+.mg-icon-btn:hover {
+  filter: none; /* отменя глобалния button:hover brightness */
+  color: var(--text-primary);
+  border-color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
+}
+
+/* ==========================================================================
+   4.5 TAGS & CHIPS · подблок Т3 — StatusChip (В2)
+      Рецепта: винаги ЦВЯТ (токен) + ГЛИФ + текст; фон = 8% тинт на тона,
+      граница = самия токен (като легаси .tag.ok от Т1). flat = за плътни
+      таблици: без тинт, неутрална граница — носещ остава цветът на текста.
+   ========================================================================== */
+
+.mg-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: 100%;
+  font-size: var(--fs-12);
+  line-height: var(--lh-tight);
+  font-weight: var(--fw-medium);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm); /* чип → 4px */
+  border: 1px solid var(--border-default);
+  background: var(--bg-panel);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.mg-chip__icon {
+  flex: none;
+  font-size: var(--fs-12);
+  line-height: var(--lh-tight);
+  font-weight: var(--fw-semibold);
+}
+.mg-chip__text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis; /* дълъг topic в клетка → „…", не чупи реда */
+}
+
+/* sm: същите 12px (подовата граница), но без вертикален padding — за
+   плътни редове; md си остава стандартният */
+.mg-chip--sm {
+  padding: 0 var(--space-2);
+}
+/* ID/topic/packet id → JetBrains Mono на 12px (в чип контекст; T1 .mono
+   е 13px за тяло — тук държим реда на таблицата на 12) */
+.mg-chip--mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* тонове: текст + граница = статусния токен; фон = 8% тинт (color-mix,
+   нулев нов hex). Контраст: виж notes.md §Контраст — най-нисък е danger
+   4.97:1 (върху panel), всички ≥ AA 4.5:1 */
+.mg-chip--success {
+  color: var(--status-success);
+  border-color: var(--status-success);
+  background: color-mix(in srgb, var(--status-success) 8%, transparent);
+}
+.mg-chip--warning {
+  color: var(--status-warning);
+  border-color: var(--status-warning);
+  background: color-mix(in srgb, var(--status-warning) 8%, transparent);
+}
+.mg-chip--danger {
+  color: var(--status-danger);
+  border-color: var(--status-danger);
+  background: color-mix(in srgb, var(--status-danger) 8%, transparent);
+}
+.mg-chip--info {
+  color: var(--status-info);
+  border-color: var(--status-info);
+  background: color-mix(in srgb, var(--status-info) 8%, transparent);
+}
+.mg-chip--accent {
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
+}
+
+/* плътният вариант (клетки в таблици): без тинт-фон → мъкне се по-леко
+   при 60–140 реда (Т13). ДЕКЛАРИРАН СЛЕД тоновете — равна специфичност е,
+   печели по-късният → фонът/границата се отменят, цветът на текста
+   (носещият) остава тоналният */
+.mg-chip--flat {
+  background: transparent;
+  border-color: var(--border-default);
+}
+
+/* ==========================================================================
+   4.7 MODAL / DRAWER · подблок Т3 — Modal/Drawer с focus trap (В2)
+      Визуално 1:1 с легаси .modal-back/.modal (Т1), но като компонентни
+      класове; drawer е страничен вариант (Т11 детайл на възел). Без сенки —
+      разделението е чрез фона-завеса и 1px граница.
+   ========================================================================== */
+
+.mg-modal-back {
+  position: fixed;
+  inset: 0;
+  z-index: 10; /* над панел в цял екран (8) и топбар (5) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  background: color-mix(in srgb, var(--bg-canvas) 72%, transparent);
+}
+.mg-modal {
+  display: flex;
+  flex-direction: column;
+  width: 720px; /* легаси размерът на .modal (Т1) */
+  max-width: 100%;
+  max-height: 85vh;
+  min-height: 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg); /* модал → 12px */
+}
+
+.mg-drawer-back {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  background: color-mix(in srgb, var(--bg-canvas) 72%, transparent);
+}
+.mg-drawer-back--right { justify-content: flex-end; }
+.mg-drawer-back--left  { justify-content: flex-start; }
+.mg-drawer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 480px;
+  max-width: 100vw;
+  min-height: 0;
+  background: var(--bg-surface);
+  border-left: 1px solid var(--border-default); /* ръб вместо сянка */
+}
+.mg-drawer--left {
+  border-left: none;
+  border-right: 1px solid var(--border-default);
+}
+/* мобилно/tablet: drawer на цял екран (width идва inline от проп-а →
+   !important е единственият начин да го победим от CSS) */
+@media (max-width: 900px) {
+  .mg-drawer {
+    width: 100vw !important;
+    border-left: none;
+    border-right: none;
+  }
+}
+
+/* вътрешна структура — обща за модал и drawer */
+.mg-dialog__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4) var(--space-2);
+}
+.mg-dialog__title {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere; /* дълъг topic като заглавие */
+}
+.mg-dialog__title.mono {
+  font-size: var(--fs-15); /* mono заглавие: 15px, не 13 — носещо е */
+}
+.mg-dialog__body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 0 var(--space-4);
+}
+.mg-dialog__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+}
+
+/* ==========================================================================
+   4.8 FEEDBACK · подблок Т3 — Toast стек + LiveIndicator (В2)
+      Toast-ът е ПЛЪТЕН (тинтът е mix-нат ВЪРХУ --bg-surface, не с
+      transparent — контрастът не зависи от това какво свети отдолу).
+      Live: точка + етикет; пулс = разширяващ се ринг (transform/opacity,
+      НЕ сянка), САМО при свържи данни + live състояние.
+   ========================================================================== */
+
+/* --- Toast контейнер: fixed долу вдясно, НАД модалите (z 20 > 10) --- */
+.mg-toasts {
+  position: fixed;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: min(380px, calc(100vw - 2 * var(--space-4)));
+  pointer-events: none; /* контейнерът не блокира клика; самите карти — да */
+}
+.mg-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  animation: mg-toast-in 150ms ease-out;
+}
+@keyframes mg-toast-in {
+  from { opacity: 0; transform: translateY(var(--space-2)); }
+  to   { opacity: 1; transform: none; }
+}
+
+.mg-toast__icon {
+  flex: none;
+  line-height: var(--lh-base);
+  font-weight: var(--fw-semibold);
+}
+.mg-toast__content {
+  flex: 1;
+  min-width: 0;
+}
+.mg-toast__title {
+  font-size: var(--fs-12);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 2px;
+}
+.mg-toast__msg {
+  font-size: var(--fs-13);
+  line-height: var(--lh-base);
+  overflow-wrap: anywhere;
+}
+.mg-toast__action {
+  flex: none;
+  background: transparent; /* отменя глобалния accent `button` */
+  color: var(--accent-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+}
+.mg-toast__action:hover {
+  filter: none;
+  border-color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
+}
+.mg-toast__close {
+  flex: none;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: var(--space-1);
+  font-size: var(--fs-13);
+  line-height: var(--lh-tight);
+  cursor: pointer;
+}
+.mg-toast__close:hover {
+  filter: none;
+  color: var(--text-primary);
+}
+
+/* тонове: иконата + заглавието носят тона; фонът е ПЛЪТЕН тинт 8% върху
+   --bg-surface (числата в notes.md §Контраст) */
+.mg-toast--success {
+  background: color-mix(in srgb, var(--status-success) 8%, var(--bg-surface));
+  border-color: var(--status-success);
+}
+.mg-toast--success .mg-toast__icon,
+.mg-toast--success .mg-toast__title { color: var(--status-success); }
+
+.mg-toast--warning {
+  background: color-mix(in srgb, var(--status-warning) 8%, var(--bg-surface));
+  border-color: var(--status-warning);
+}
+.mg-toast--warning .mg-toast__icon,
+.mg-toast--warning .mg-toast__title { color: var(--status-warning); }
+
+.mg-toast--danger {
+  background: color-mix(in srgb, var(--status-danger) 8%, var(--bg-surface));
+  border-color: var(--status-danger);
+}
+.mg-toast--danger .mg-toast__icon,
+.mg-toast--danger .mg-toast__title { color: var(--status-danger); }
+
+.mg-toast--info {
+  background: color-mix(in srgb, var(--status-info) 8%, var(--bg-surface));
+  border-color: var(--status-info);
+}
+.mg-toast--info .mg-toast__icon,
+.mg-toast--info .mg-toast__title { color: var(--status-info); }
+
+/* --- LiveIndicator: жив / спрял / свързва се --- */
+.mg-live {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+.mg-live--compact {
+  gap: var(--space-1);
+}
+.mg-live__dot {
+  position: relative;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.mg-live__label {
+  white-space: nowrap;
+}
+
+.mg-live--live      { color: var(--status-success); }
+.mg-live--reconnect { color: var(--status-warning); }
+.mg-live--idle      { color: var(--text-muted); }
+/* спрял поток → КУХА точка (без запълване): „има индикатор, няма ток" */
+.mg-live--idle .mg-live__dot {
+  background: transparent;
+  border: 1px solid currentColor;
+}
+
+/* пулс: разширяващ се ринг около точката — САМО когато модификаторът е
+   сложен (pulsing && state==='live' в LiveIndicator). Без сянка, без
+   безкраен idle миг — правилото „пулсира само при нови данни" */
+.mg-live__dot--pulse::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  animation: mg-live-ping 1.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes mg-live-ping {
+  from { transform: scale(1);   opacity: 0.9; }
+  to   { transform: scale(2.4); opacity: 0; }
+}
+
+/* достъпност: без анимация при reduced motion — състоянието се чете от
+   текста (LIVE/СПРЯН/СВЪРЗВАНЕ…), не от движението */
+@media (prefers-reduced-motion: reduce) {
+  .mg-toast { animation: none; }
+  .mg-live__dot--pulse::before { animation: none; opacity: 0.45; }
+}

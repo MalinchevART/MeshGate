@@ -1,0 +1,158 @@
+/* ==========================================================================
+   MeshGate · Т6 „Топбар + sidebar + брояч аларми" — Вариант 2
+   „Шел като компоненти" — подблок „Т6" за секция 4.1 SHELL
+   ----------------------------------------------------------------------------
+   Дестинация при внедряване: apps/web/src/styles.css, секция 4.1 SHELL.
+   ТОЧНО МЯСТО НА ВМЪКВАНЕ: МЕЖДУ легаси правилото `.topbar-right { … }`
+   и легаси блока `@media (max-width: 900px)`.
+   ЗАЩО ТОЧНО ТАМ (критично за каскадата):
+   · този блок ОСНОВЯВА стойности на `.topbar`/`.sidebar` с токена
+     --topbar-h (същи стойности 52px → нула визуална промяна). Той трябва
+     да е СЛЕД легаси базите (за да ги засени при равна специфичност) и
+     ПРЕДИ легаси @media 900/800 (за да продължат ТЕХНИТЕ правила да
+     печелят при тесен екран — media query не добавя специфичност);
+   · всичко останало тук са НОВИ класове (topbar-left/topbar-live/
+     topbar-user/side-btn__icon/side-btn__label/side-badge) — за тях
+     редът няма значение.
+
+   Правила (Т1): само токени (нула hex), нищо под 12px, БЕЗ сенки
+   (разделението е с 1px граници и плътни плочки), radius 4/8/12,
+   z-стълбата не се пипа (топбарът остава sticky z 5; нищо ново над нея).
+   ========================================================================== */
+
+/* --- Т6.0 — токен на височината на топбара (препоръка от notes на Т3,
+       §Рискове 3): стойността е същата 52px; още потребители на токена:
+       .mg-panel__head (4.3, top: 52px) — при внедряване ЕДНОКРАТНА
+       подмяна там на 52px → var(--topbar-h); нула визуална делта.
+       Обявен тук (а не в §1 TOKENS), за да е подблокът самодостатъчен —
+       при внедряване може да се изкачи в §1 без промяна на стойността. --- */
+:root { --topbar-h: 52px; }
+.topbar { height: var(--topbar-h); }
+.sidebar {
+  top: var(--topbar-h);
+  height: calc(100vh - var(--topbar-h));
+}
+
+/* --- Т6.1 — Topbar: ляв клъстер (бранд + приложен LIVE) наляво,
+       потребителски блок надясно ------------------------------------------------
+       .topbar-left разделя бранда от LIVE с 1px вертикална граница
+       (тонка разделителна линия вместо сянка/гравитация).
+       .topbar-right получава margin-left:auto — потребителският блок
+       отива вдясно (днес стоеше до бранда; единственото съзнателно
+       разместване на Т6 — спек: „по-подреден десен блок"). */
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0; /* позволява на .topbar-user да се свива с ellipsis */
+}
+.topbar-live {
+  display: flex;
+  align-items: center;
+  padding-left: var(--space-3);
+  border-left: 1px solid var(--border-default);
+}
+.topbar-right { margin-left: auto; }
+
+/* потребителско име: 13px (плътно тяло), muted; свива се с ellipsis при
+   дълги имена/тесен екран — не пренася топбара на втори ред сам по себе си */
+.topbar-user {
+  color: var(--text-muted);
+  font-size: var(--fs-13);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- Т6.2 — Sidebar item: икона + текст (+ badge) ----------------------------
+       .side-btn става flex (легаси box: само подравняване/фон/цвят остават
+       от Т1 блока — display/position се засеняват тук при равна
+       специфичност). Иконната колона е ФИКСИРАНА 20px → етикетите на всички
+       item-и се подравняват в колона, независимо от глифа. */
+.side-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  position: relative; /* опорна точка за акцент-бара на активния */
+}
+.side-btn__icon {
+  flex: none;
+  width: 20px;
+  text-align: center;
+  font-size: var(--fs-14);
+  line-height: var(--lh-tight);
+  color: inherit; /* тонът идва от текста на бутона: muted / accent */
+}
+.side-btn__label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* груповите заглавия се подравняват с ЕТИКЕТИТЕ (padding + иконна колона +
+   gap), не с иконите — по-тихна йерархия */
+.side-title {
+  padding-left: calc(var(--space-3) + 20px + var(--space-2));
+}
+
+/* тюркоазен акцент на активния (спек Т6): 2px бар ВЪТРЕ в бутона —
+   без сянка, без разместване (absolute плочка; radius-sm);
+   цветът/фонът на активния остават от легаси .side-btn.active */
+.side-btn.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: var(--space-1);
+  bottom: var(--space-1);
+  width: 2px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-primary);
+}
+
+/* --- Т6.3 — броячът на аларми: danger badge ----------------------------------
+       Плътна плочка (без тинт-прозрачност): статусът се вижда и до
+       неутрален, и до активен (акцент) бутон. Текстът е --bg-canvas върху
+       --status-danger: контраст 6.43:1 (notes.md §Контраст). 12px +
+       tabular-nums — числото не „танцува" при обновяване на 10s.
+       Височината 18px е под-минимумът за допир до съседен етикет; ЦЕЛИЯТ
+       бутон остава целта за докос (≥32px, Т33). */
+.side-badge {
+  flex: none;
+  min-width: 20px;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-sm);
+  background: var(--status-danger);
+  color: var(--bg-canvas);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+  line-height: 18px;
+  text-align: center;
+}
+
+/* --- Т6.4 — responsive --------------------------------------------------------
+       <900px: тялото се колонизира от ЛЕГАСИ @media 900 блока на 4.1
+       (sidebar става хоризонтална лента с wrap; side-title се скрива);
+       нашите flex item-и (икона/етикет/badge) продължават да работят в
+       хоризонталните „пелети" без намеса — тук само смукваме топбара.
+       <800px: топбарът wrap-ва на 2 реда (легаси 4.10 @media 800);
+       LIVE остава до бранда (topbar-left е едно цяло), потребителският
+       блок отива на втория ред, ИЗКЛЮЧИТЕЛНО видими остават всички
+       състояния (QA: „LIVE състоянията се виждат"). */
+@media (max-width: 900px) {
+  .topbar { gap: var(--space-3); }
+  .topbar-left { gap: var(--space-3); }
+  .topbar-live { padding-left: var(--space-3); }
+  .topbar-user { max-width: 140px; }
+}
+
+/* <640px (телефон; извън QA gates 900/800 — бонус, не изискване):
+   wordmark-ът се свива до символа; LIVE + потребител остават видими.
+   Нищо под 12px не се въвежда — само скриване/пренареждане. */
+@media (max-width: 640px) {
+  .brand-word { display: none; }
+  .topbar-user { max-width: 110px; }
+}

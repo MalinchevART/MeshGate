@@ -1,0 +1,1802 @@
+/* MeshGate — built by the N&M Control team.
+ * ==========================================================================
+   MeshGate — дизайн-система (фаза Т1: съчетание В3+В2+корекции по контракта)
+   „Токени + типографски компонентни класове"
+
+   Кандидат-замяна на apps/web/src/styles.css. Фокусът е типографията
+   като система: --fs-…/--lh-… скали + семантични текстови класове.
+   Файлът е СКЕЛЕТ: следващите фази ДОБАВЯТ в ясните секции, а не
+   пренаписват —
+     · Т3 (базови компоненти)  → добавя подблокове в секция 4 COMPONENTS
+     · Т6 (шел + аларми)       → разширява блока 4.1 SHELL
+     · Т9 (KPI Dashboard)      → консумира .metric-value/.metric-label/.kicker
+     · Т12 (Таблица)           → надгражда блока 4.4 TABLE
+
+   Правила на системата:
+     · тънки граници (1px var(--border-default)), БЕЗ сенки;
+     · нищо под 12px;
+     · JetBrains Mono (.mono) за Node ID / topic / packet id;
+     · полупрозрачни плочки чрез color-mix() от статусния токен —
+       нула дублирани hex стойности.
+
+   Секции:
+     0. FONTS            · @font-face, self-hosted (public/fonts)
+     1. TOKENS           · цветове, spacing, radius, шрифтове, --fs-…/--lh-…
+     2. BASE             · reset, body, фокус
+     3. TYPOGRAPHY       · типографска скала + семантични текстови класове
+     4. COMPONENTS       · shell / cards / panel / table / chips / forms /
+                           modal / feedback / code / login
+     5. UTILITIES        · едноцелни помощни класове
+     6. LEGACY ALIASES   · старите 11 имена на променливи → новите токени
+   ========================================================================== */
+
+/* ==========================================================================
+   0. FONTS — self-hosted, нула CDN заявки (офлайн Docker).
+      styles.css е единственият източник на @font-face (fonts.css е изтрит).
+   ========================================================================== */
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 100 700; /* variable font: един файл за всички тегла */
+  font-display: optional; /* LAN: без FOUT рефлоу; локалният nginx отговаря в block-периода */
+  src: url(/fonts/IBMPlexSans-cyrillic-ext.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 100 700; /* variable font: един файл за всички тегла */
+  font-display: optional; /* LAN: без FOUT рефлоу; локалният nginx отговаря в block-периода */
+  src: url(/fonts/IBMPlexSans-cyrillic.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 100 700; /* variable font: един файл за всички тегла */
+  font-display: optional; /* LAN: без FOUT рефлоу; локалният nginx отговаря в block-периода */
+  src: url(/fonts/IBMPlexSans-latin-ext.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 100 700; /* variable font: един файл за всички тегла */
+  font-display: optional; /* LAN: без FOUT рефлоу; локалният nginx отговаря в block-периода */
+  src: url(/fonts/IBMPlexSans-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 800; /* variable font: един файл за всички тегла */
+  font-display: optional; /* LAN: без FOUT рефлоу; локалният nginx отговаря в block-периода */
+  src: url(/fonts/JetBrainsMono-cyrillic-ext.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 800; /* variable font: един файл за всички тегла */
+  font-display: optional; /* LAN: без FOUT рефлоу; локалният nginx отговаря в block-периода */
+  src: url(/fonts/JetBrainsMono-cyrillic.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 800; /* variable font: един файл за всички тегла */
+  font-display: optional; /* LAN: без FOUT рефлоу; локалният nginx отговаря в block-периода */
+  src: url(/fonts/JetBrainsMono-latin-ext.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 800; /* variable font: един файл за всички тегла */
+  font-display: optional; /* LAN: без FOUT рефлоу; локалният nginx отговаря в block-периода */
+  src: url(/fonts/JetBrainsMono-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+
+/* ==========================================================================
+   1. TOKENS — единствено място с цветове/размери. Полупрозрачните
+      вариантите се извеждат с color-mix(), не с нови hex стойности.
+   ========================================================================== */
+:root {
+  /* --- цветове: фонове (дълбочина canvas → surface → panel).
+     ТОПЛА вълна (по сигнал на собственика 29.10: „студено, само синьо,
+     червеното крещи"): сливащо-въгленова база вместо navy; акцентът
+     остава бранд тюркоаз като контрапункт. Контрасти преизчислени —
+     всички текстови AA на трите фона (danger 4.51 на panel). --- */
+  --bg-canvas: #100D14;
+  --bg-surface: #171221;
+  --bg-panel: #1E1828;
+
+  /* --- цветове: текст (топъл бял / топло сиво-лилаво) --- */
+  --text-primary: #F0EAF4;
+  --text-muted: #A79DB5;
+
+  /* --- цветове: граници (тънки 1px, вместо сенки) --- */
+  --border-default: #352B44;
+
+  /* --- цветове: акцент и статус: кехлибарено warning, ОМЕКОТЕНО
+     коралово danger (не неоново червено — да не крещи на тъмното) --- */
+  --accent-primary: #22D3D9;
+  --status-success: #57C98A;
+  --status-warning: #F0A848;
+  --status-danger: #E2504E;
+  --status-info: #7BA6E8;
+
+  /* --- spacing: 4 / 8 / 12 / 16 / 24 / 32 --- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* --- radius: 4 / 8 / 12 --- */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* --- шрифтове (self-hosted; --font-mono за Node ID / topic / packet id) --- */
+  --font-ui: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+
+  /* --- типографска скала: НИЩО ПОД 12px ---
+     12 таблици/чипове/labels · 13 плътно тяло+mono · 14 тяло ·
+     15 панелни заглавия (таван) · 16 бренд · 18 резервиран ·
+     20 заглавие на страница (под) · 24 metric/hero */
+  --fs-12: 12px;
+  --fs-13: 13px;
+  --fs-14: 14px;
+  --fs-15: 15px;
+  --fs-16: 16px;
+  --fs-18: 18px;
+  --fs-20: 20px;
+  --fs-24: 24px;
+
+  /* --- line-height скала --- */
+  --lh-tight: 1.3;   /* заглавия и цифри */
+  --lh-base: 1.45;   /* тяло по подразбиране */
+  --lh-loose: 1.6;   /* плътен текст на 12–13px */
+}
+
+/* ==========================================================================
+   2. BASE — reset и глобални елементи
+   ========================================================================== */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg-canvas);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--fs-14);
+  line-height: var(--lh-base);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* клавиатурен фокус — винаги видим (input-ите ползват border-color по-долу) */
+button:focus-visible,
+.side-btn:focus-visible,
+.nav-btn:focus-visible,
+.chip:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+::selection { background: var(--accent-primary); color: var(--bg-canvas); }
+
+/* ==========================================================================
+   3. TYPOGRAPHY — скалата като система.
+      Тази секция притежава ШРИФТОВИТЕ свойства (size/weight/lh/цветове
+      на текста); маржиновете и подредбата остават в COMPONENTS.
+      Нови семантични класове: .h-page .kicker .panel-title .metric-value
+      .metric-label .mono .text-muted-sm
+   ========================================================================== */
+
+/* -- 3.1 елементна мрежа: всяко заглавие е на скалата, нула изключения -- */
+h1, h2, h3, h4 { line-height: var(--lh-tight); }
+h1 { font-size: var(--fs-20); font-weight: var(--fw-semibold); }
+h2 { font-size: var(--fs-15); font-weight: var(--fw-medium); }
+h3 { font-size: var(--fs-13); font-weight: var(--fw-medium); }
+h4 { font-size: var(--fs-13); font-weight: var(--fw-medium); }
+h1 { margin: 0 0 var(--space-4); }
+h2 { margin: var(--space-2) 0; }
+h3 { margin: var(--space-2) 0 var(--space-1); }
+
+/* -- 3.2 .h-page — заглавие на страница (20–24/600); консумират Т6/Т9 -- */
+.h-page,
+.login h1 {
+  font-size: var(--fs-20);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.2px;
+}
+.h-page { margin: 0 0 var(--space-4); }
+
+/* -- 3.3 .kicker — надзаглавие над .h-page (uppercase, акцент); Т9/Т27 -- */
+.kicker {
+  font-size: var(--fs-12);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--accent-primary);
+  margin: 0 0 var(--space-2);
+}
+
+/* -- 3.4 .panel-title — заглавие на панел (13–15/500) --
+      старите потребители (.panel h2 / .modal h2 / .toolbar h2) вече са
+      на същата рецепта — класът е готов за компонента Panel от Т3 */
+.panel-title,
+.panel h2,
+.modal h2,
+.toolbar h2 {
+  font-size: var(--fs-15);
+  font-weight: var(--fw-medium);
+}
+.panel-title { margin: 0 0 var(--space-3); }
+
+/* -- 3.5 .metric-value — голяма цифра с tabular-nums (не „танцува" при
+      live обновявания); KPI редът на Т9 и Card/Metric от Т3 -- */
+.metric-value,
+.stat-value {
+  font-size: var(--fs-24);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.2px;
+}
+
+/* -- 3.6 .metric-label — 12–13 muted uppercase с letterspacing -- */
+.metric-label,
+.stat-label {
+  font-size: var(--fs-12);
+  font-weight: var(--fw-medium);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+/* -- 3.7 .mono — JetBrains Mono за Node ID / topic / packet id;
+      13px (спрямо тяло 14), защото mono глифите текат по-широко -- */
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-13);
+  font-variant-numeric: tabular-nums;
+}
+
+/* -- 3.8 .text-muted-sm — каноничният „secondary text" (днес честият
+      комбо class="muted small", ~90 употреби) -- */
+.text-muted-sm {
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  line-height: var(--lh-loose);
+}
+
+/* ==========================================================================
+   4. COMPONENTS — всички UI класове. Подблоковете имат ясни граници,
+      за да ДОБАВЯТ следващите фази (Т3 компоненти, Т6 шел, Т12 таблица),
+      вместо да пренаписват.
+   ========================================================================== */
+
+/* ---------- 4.0 BRAND LOCKUP (Т2) — консумира се от components/Brand.tsx;
+                wordmark-ът е HTML текст → fs/weight наследява от
+                контекста (.brand / .login h1) ---------- */
+.brand-lockup {
+  display: inline-grid;
+  grid-template-columns: auto auto; /* кол. 1 = символ, кол. 2 = текст */
+  column-gap: var(--space-2);       /* 8px — същото като .brand gap */
+  row-gap: 2px;
+  align-items: center;
+}
+/* символът временно заема и двата реда — таглайнът (ако го има) застава
+   в колона 2, ред 2 → подравнен с началото на „MeshGate", без magic числа */
+.brand-lockup .brand-mark { grid-row: 1 / span 2; }
+
+.brand-word { color: var(--text-primary); }        /* „Mesh" */
+.brand-word-gate { color: var(--accent-primary); } /* „Gate" в акцент */
+
+.brand-tagline {
+  font-family: var(--font-mono);
+  font-size: var(--fs-12);        /* нищо под 12px — правилото на системата */
+  color: var(--text-muted);
+  letter-spacing: 2.2px;
+  white-space: nowrap;
+}
+
+/* ---------- 4.1 SHELL · топбар + sidebar + main · Т6 разширява тук
+                (брояч аларми, LIVE индикатор, сегменти с икони) ---------- */
+.shell { display: flex; flex-direction: column; min-height: 100vh; }
+
+.topbar {
+  display: flex; align-items: center; gap: var(--space-6);
+  padding: 0 var(--space-6); height: var(--topbar-h);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+  position: sticky; top: 0; z-index: 5;
+}
+/* ляво меню (визията от docs/11): тело = странична лента + съдържание */
+.body { display: flex; flex: 1; min-height: 0; }
+
+.sidebar {
+  width: 220px; flex-shrink: 0;
+  padding: var(--space-3) var(--space-2);
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-default);
+  overflow-y: auto; position: sticky; top: var(--topbar-h);
+  height: calc(100vh - var(--topbar-h));
+}
+.side-section { margin-bottom: var(--space-3); }
+.side-title {
+  font-size: var(--fs-12);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase; letter-spacing: 0.8px;
+  color: var(--text-muted);
+  padding: 0 var(--space-3) var(--space-1);
+}
+.side-btn {
+  display: block; width: 100%; text-align: left;
+  background: transparent; color: var(--text-muted); border: none;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm); cursor: pointer; font: inherit;
+  font-size: var(--fs-13);
+}
+.side-btn:hover { color: var(--text-primary); background: var(--bg-panel); }
+.side-btn.active {
+  color: var(--accent-primary); background: var(--bg-panel);
+  font-weight: var(--fw-semibold);
+}
+
+.brand {
+  display: flex; align-items: center; gap: var(--space-2);
+  font-size: var(--fs-16); font-weight: var(--fw-semibold);
+  letter-spacing: 0.4px;
+}
+.brand-mark { color: var(--accent-primary); }
+
+.pill {
+  font-size: var(--fs-12);
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--bg-panel); color: var(--text-muted);
+  border: 1px solid var(--border-default);
+}
+
+.nav-btn {
+  background: transparent; color: var(--text-muted); border: none;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm); cursor: pointer; font: inherit;
+}
+.nav-btn:hover { color: var(--text-primary); background: var(--bg-panel); }
+.nav-btn.active { color: var(--accent-primary); background: var(--bg-panel); }
+.nav-btn.ghost { color: var(--text-muted); }
+.nav-btn.danger { color: var(--status-danger); }
+.topbar-right { display: flex; align-items: center; gap: var(--space-3); }
+
+main { padding: var(--space-6); max-width: 1200px; margin: 0 auto; width: 100%; }
+
+/* ---------- 4.1 Т6 · ТОПБАР + SIDEBAR + БРОЯЧ АЛАРМИ (Shell.tsx) ------------
+   Съчетание В2+В3: .topbar-left (бранд+LIVE с 1px разделител), .topbar-right
+   получава margin-left:auto; sidebar бутоните стават flex с иконна колона
+   (SVG currentColor) + акцент-бар 2px на активния + danger badge; алармата
+   на топбара е .mg-alarm (StatusChip в бутона). ВМЪКНАТО ПРЕДИ легаси
+   @media 900, за да продължат тесните медии да печелят. ---------- */
+:root { --topbar-h: 52px; } /* от бележката на Т3; още потребители по-долу */
+.topbar { height: var(--topbar-h); }
+.sidebar {
+  top: var(--topbar-h);
+  height: calc(100vh - var(--topbar-h));
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.topbar-live {
+  display: flex;
+  align-items: center;
+  padding-left: var(--space-3);
+  border-left: 1px solid var(--border-default);
+}
+.topbar-right { margin-left: auto; }
+
+/* потребителско име: 13px muted; елипса при дълги имена/тесен екран */
+.topbar-user {
+  color: var(--text-muted);
+  font-size: var(--fs-13);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* алармата на топбара: StatusChip в неутрализиран бутон (глобалният accent
+   `button` е отменен изрично); hover = акцентна граница на чипа */
+.mg-alarm {
+  background: transparent;
+  color: inherit;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.mg-alarm:hover { filter: none; }
+.mg-alarm:hover .mg-chip { border-color: var(--accent-primary); }
+.mg-alarm:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 2px; }
+/* двойният етикет: пълен ≥800px, само числото под (топбарът там е 2 реда) */
+.mg-alarm__short { display: none; }
+@media (max-width: 800px) {
+  .mg-alarm__full { display: none; }
+  .mg-alarm__short { display: inline; }
+}
+
+/* sidebar item: flex с фиксирана иконна колона → етикетите се подравняват */
+.side-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  position: relative; /* опорна точка за акцент-бара */
+}
+.side-btn__icon {
+  flex: none;
+  display: inline-flex;
+  color: inherit; /* тонът идва от бутона: muted / тюркоз на активния */
+}
+.side-btn__label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* груповите заглавия се подравняват с ЕТИКЕТИТЕ, не с иконите */
+.side-title {
+  padding-left: calc(var(--space-3) + 16px + var(--space-2));
+}
+
+/* тюркоазен акцент на активния: 2px бар ВЪТРЕ в бутона, без сянка */
+.side-btn.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: var(--space-1);
+  bottom: var(--space-1);
+  width: 2px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-primary);
+}
+
+/* броячът: плътна danger плочка (текст --bg-canvas върху --status-danger,
+   контраст 6.43:1); 12px tabular-nums — числото не „танцува" на 10s полинг */
+.side-badge {
+  flex: none;
+  min-width: 20px;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-sm);
+  background: var(--status-danger);
+  color: var(--bg-canvas);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+  line-height: 18px;
+  text-align: center;
+}
+
+/* nav-обвивката на sidebar секциите (Т6, aria-label „Главно меню") е
+   ПРОЗРАЧНА за layout: display:contents кара .side-section да Participate
+   в .sidebar директно — легаси @media 900 (хоризонтален wrap) работи 1:1
+   както преди обвивката */
+.sidebar nav { display: contents; }
+
+@media (max-width: 900px) {
+  .topbar { gap: var(--space-3); }
+  .topbar-user { max-width: 140px; }
+  /* хоризонталния режим: „пелетите" са компактни — акцент-барът се скрива;
+     активният е все така тройно кодиран (цвят + тегло + фон) */
+  .side-btn.active::before { display: none; }
+}
+
+/* легаси секциите нямаха вътрешен wrap — 4-бутонната Monitoring група
+   преливаше viewport на телефон; <900px бутоните се пренареждат */
+@media (max-width: 900px) {
+  .side-section { flex-wrap: wrap; }
+}
+
+@media (max-width: 640px) {
+  .brand-word { display: none; }
+  .topbar-user { max-width: 110px; }
+}
+
+@media (max-width: 900px) {
+  .body { flex-direction: column; }
+  .sidebar {
+    width: 100%; height: auto; position: static;
+    display: flex; flex-wrap: wrap; gap: var(--space-1);
+    padding: var(--space-2);
+    border-right: none; border-bottom: 1px solid var(--border-default);
+  }
+  .side-section { display: flex; gap: var(--space-1); margin: 0; }
+  .side-title { display: none; }
+  .side-btn { width: auto; padding: var(--space-1) var(--space-3); }
+}
+
+/* ---------- 4.2 CARDS & METRICS · Т3 Card/Metric и Т9 KPI ред
+                надграждат тук (еднаква височина, tone, контекст) ---------- */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default); /* тънка граница, БЕЗ сянка */
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+.stat-value { margin-top: var(--space-1); }
+.stat.ok .stat-value { color: var(--status-success); }
+.stat.bad .stat-value { color: var(--status-danger); }
+.stat-sub {
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  margin-top: var(--space-1);
+}
+
+/* ==========================================================================
+   4.2 CARDS & METRICS · подблок Т3 — MetricCard (В2)
+      KPI картата: flex колона + min-height → еднаква височина в grid ред;
+      контекст редът е pinned долу (margin-top: auto). Типографията идва от
+      Т1 класовете .metric-label / .metric-value (12 uppercase muted /
+      24·600 tabular-nums) — тук само подредба.
+   ========================================================================== */
+
+/* grid-ред за KPI (Т9): auto-fit → без media queries; дефиниран тук, за да
+   не зависи Т9 от легаси .cards; картите се разпъват на еднаква височина
+   (align-items: stretch по подразбиране в grid) */
+.mg-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.mg-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 104px; /* label(12) + value(24·1.3) + context(12·1.6) + номера */
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default); /* тънка граница, БЕЗ сянка */
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.mg-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.mg-card__icon {
+  font-size: var(--fs-14);
+  line-height: var(--lh-tight);
+  flex: none;
+}
+.mg-card__label {
+  overflow-wrap: anywhere; /* дълги имена не чупят колоната */
+}
+.mg-card__value {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.mg-card__value--mono {
+  font-family: var(--font-mono); /* fs остава 24 от .metric-value */
+}
+/* контекст ред: 12px muted, ЗАКОТВЕН долу → в grid реда всички карти са
+   еднакво високи и контекстите се изравняват */
+.mg-card__context {
+  margin-top: auto;
+  padding-top: var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  line-height: var(--lh-loose);
+  overflow-wrap: anywhere;
+}
+
+.mg-card--center {
+  text-align: center;
+}
+.mg-card--center .mg-card__head {
+  justify-content: center;
+}
+
+/* тон → цвят на СТОЙНОСТТА (и иконата); споделен с чиповете по-долу */
+.mg-tone--success { color: var(--status-success); }
+.mg-tone--warning { color: var(--status-warning); }
+.mg-tone--danger  { color: var(--status-danger); }
+.mg-tone--info    { color: var(--status-info); }
+.mg-tone--accent  { color: var(--accent-primary); }
+/* neutral = наследява text-primary → няма правило */
+
+
+/* ---------- 4.2 Т9-pre · KPI ДАШБОРД редове и графики (Overview) ----------
+   dash-row: 2 колони (широк панел + страничен); под 1000px — стек.
+   mg-bars: часови колони (чист div, без SVG зависимост); mg-chan: канал-
+   бар-ове. Всичко с токени; височината на колоната е data-driven inline. */
+.dash-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: start;
+}
+.dash-row .mg-panel { margin-bottom: var(--space-3); }
+@media (max-width: 1000px) {
+  .dash-row { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* таблица в панел с много колони — хоризонтален скрол вместо чупене на
+   оформлението (Последни пакети; по-широкият проход е в Т33) */
+.table-scroll { overflow-x: auto; }
+
+.mg-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  min-height: 180px;
+  padding-top: var(--space-2);
+}
+.mg-bars__col {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  height: 100%;
+}
+.mg-bars__bar {
+  width: 100%;
+  max-width: 34px;
+  background: color-mix(in srgb, var(--accent-primary) 55%, var(--bg-panel));
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+.mg-bars__bar:hover { background: var(--accent-primary); }
+/* последната (текущата) кофа е ярка — „сега" */
+.mg-bars__bar--last { background: var(--accent-primary); }
+.mg-bars__label {
+  font-size: var(--fs-12);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.mg-chan { display: flex; flex-direction: column; gap: var(--space-2); }
+.mg-chan__row {
+  display: grid;
+  grid-template-columns: minmax(90px, 130px) 1fr auto;
+  gap: var(--space-2);
+  align-items: center;
+}
+.mg-chan__name {
+  font-size: var(--fs-12);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mg-chan__track {
+  height: 10px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.mg-chan__fill {
+  height: 100%;
+  background: var(--accent-primary);
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+.mg-chan__num {
+  font-size: var(--fs-12);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 4.3 PANEL · контейнер със заглавие + действия;
+                Т3 добавя header/actions/fullscreen варианта ---------- */
+.panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default); /* тънка граница, БЕЗ сянка */
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+.panel h2 { margin: 0 0 var(--space-3); }
+.panel h3 {
+  font-size: var(--fs-12);
+  color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  margin: var(--space-3) 0 var(--space-1);
+}
+.toolbar { display: flex; align-items: center; gap: var(--space-3); }
+.toolbar h2 { margin: 0; flex: 0; }
+.toolbar input { flex: 1; }
+
+/* ==========================================================================
+   4.3 PANEL · подблок Т3 — Panel със слотове + цял екран (В2)
+      head = лента със заглавие + tools (filters/actions/⛶); тялото е
+      отделено с 1px граница. Sticky head: залепя се под топбара (52px,
+      константата на shell-а от Т1 §4.1) при скрол на страницата; в цял
+      екран тялото скролва и head стои естествено (flex).
+   ========================================================================== */
+
+.mg-panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default); /* тънка граница, БЕЗ сянка */
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+  min-width: 0;
+}
+
+.mg-panel__head {
+  position: sticky;
+  top: var(--topbar-h); /* височината на топбара (Т1 §4.1) */
+  z-index: 1; /* под топбара (z 5), над редовете на тялото */
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+.mg-panel__heading {
+  min-width: 0;
+  margin-right: auto; /* избутва tools надясно */
+}
+.mg-panel__title {
+  margin: 0; /* отменя margin-а на .panel-title от Т1 §3.4 — в лента сме */
+  overflow-wrap: anywhere;
+}
+.mg-panel__subtitle {
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  line-height: var(--lh-loose);
+}
+.mg-panel__tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.mg-panel__filters,
+.mg-panel__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.mg-panel__filters input,
+.mg-panel__filters select {
+  min-width: 0;
+  width: 180px; /* филтърът в header е компактен; дългите полета — в тялото */
+}
+
+.mg-panel__body {
+  padding: var(--space-4);
+  min-height: 0;
+}
+.mg-panel--flush .mg-panel__body {
+  padding: 0; /* edge-to-edge таблици (Т12): редовете докосват границата */
+}
+
+/* цял екран (⛶ / Esc): НАД топбара (z 5), ПОД модалите (z 10) */
+.mg-panel--fs {
+  position: fixed;
+  inset: 0;
+  z-index: 8;
+  margin: 0;
+  border-radius: 0;
+}
+.mg-panel--fs .mg-panel__head {
+  top: 0;
+  border-radius: 0;
+}
+.mg-panel--fs .mg-panel__body {
+  flex: 1;
+  overflow: auto; /* тялото скролва, head стои закрепен (flex колона) */
+}
+
+/* малък иконо-бутон (⛶ / ✕) — изрично отменя глобалния accent `button`
+   от Т1 §4.6, за да е неутрален в лентата на панела и на диалога */
+.mg-icon-btn {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--fs-13);
+  line-height: var(--lh-tight);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+}
+.mg-icon-btn:hover {
+  filter: none; /* отменя глобалния button:hover brightness */
+  color: var(--text-primary);
+  border-color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
+}
+
+/* ---------- 4.4 TABLE · Т12 (компонент „Таблица") надгражда тук:
+                fixed header, сортиране, филтри, избор на колони ---------- */
+table { width: 100%; border-collapse: collapse; font-size: var(--fs-13); }
+th {
+  text-align: left; color: var(--text-muted);
+  font-size: var(--fs-12); font-weight: var(--fw-medium);
+  text-transform: uppercase; letter-spacing: 0.4px;
+  padding: var(--space-1) var(--space-2);
+  border-bottom: 1px solid var(--border-default);
+}
+td {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--border-default);
+  vertical-align: top;
+}
+tr:hover td { background: color-mix(in srgb, var(--accent-primary) 4%, transparent); }
+tr.selected td { background: color-mix(in srgb, var(--status-info) 8%, transparent); }
+.rowlink { cursor: pointer; }
+
+/* ---------- 4.5 TAGS & CHIPS · Т3 Status Chip и Т14 чипове-фасети ---------- */
+.tag {
+  font-size: var(--fs-12);
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--bg-panel); color: var(--text-muted);
+  border: 1px solid var(--border-default);
+}
+.tag.ok {
+  color: var(--status-success); border-color: var(--status-success);
+  background: color-mix(in srgb, var(--status-success) 8%, transparent);
+}
+.tag.bad {
+  color: var(--status-danger); border-color: var(--status-danger);
+  background: color-mix(in srgb, var(--status-danger) 8%, transparent);
+}
+.tag.ch { color: var(--accent-primary); border-color: var(--accent-primary); cursor: pointer; font-family: var(--font-mono); }
+
+/* чипове за фасетна филтрация (тип/канал/възел) в Packet Explorer */
+.chip {
+  font-size: var(--fs-12);
+  padding: 3px var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--bg-panel); color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  cursor: pointer;
+}
+.chip b { opacity: 0.75; font-weight: var(--fw-semibold); margin-left: 2px; }
+.chip:hover { border-color: var(--accent-primary); }
+.chip.active {
+  border-color: var(--accent-primary); color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
+}
+
+/* ==========================================================================
+   4.5 TAGS & CHIPS · подблок Т3 — StatusChip (В2)
+      Рецепта: винаги ЦВЯТ (токен) + ГЛИФ + текст; фон = 8% тинт на тона,
+      граница = самия токен (като легаси .tag.ok от Т1). flat = за плътни
+      таблици: без тинт, неутрална граница — носещ остава цветът на текста.
+   ========================================================================== */
+
+.mg-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: 100%;
+  font-size: var(--fs-12);
+  line-height: var(--lh-tight);
+  font-weight: var(--fw-medium);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm); /* чип → 4px */
+  border: 1px solid var(--border-default);
+  background: var(--bg-panel);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.mg-chip__icon {
+  flex: none;
+  font-size: var(--fs-12);
+  line-height: var(--lh-tight);
+  font-weight: var(--fw-semibold);
+}
+.mg-chip__text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis; /* дълъг topic в клетка → „…", не чупи реда */
+}
+
+/* sm: същите 12px (подовата граница), но без вертикален padding — за
+   плътни редове; md си остава стандартният */
+.mg-chip--sm {
+  padding: 0 var(--space-2);
+}
+/* ID/topic/packet id → JetBrains Mono на 12px (в чип контекст; T1 .mono
+   е 13px за тяло — тук държим реда на таблицата на 12) */
+.mg-chip--mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* тонове: текст + граница = статусния токен; фон = 8% тинт (color-mix,
+   нулев нов hex). Контраст: виж notes.md §Контраст — най-нисък е danger
+   4.97:1 (върху panel), всички ≥ AA 4.5:1 */
+.mg-chip--success {
+  color: var(--status-success);
+  border-color: var(--status-success);
+  background: color-mix(in srgb, var(--status-success) 8%, transparent);
+}
+.mg-chip--warning {
+  color: var(--status-warning);
+  border-color: var(--status-warning);
+  background: color-mix(in srgb, var(--status-warning) 8%, transparent);
+}
+.mg-chip--danger {
+  color: var(--status-danger);
+  border-color: var(--status-danger);
+  background: color-mix(in srgb, var(--status-danger) 8%, transparent);
+}
+.mg-chip--info {
+  color: var(--status-info);
+  border-color: var(--status-info);
+  background: color-mix(in srgb, var(--status-info) 8%, transparent);
+}
+.mg-chip--accent {
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
+}
+
+/* плътният вариант (клетки в таблици): без тинт-фон → мъкне се по-леко
+   при 60–140 реда (Т13). ДЕКЛАРИРАН СЛЕД тоновете — равна специфичност е,
+   печели по-късният → фонът/границата се отменят, цветът на текста
+   (носещият) остава тоналният */
+.mg-chip--flat {
+  background: transparent;
+  border-color: var(--border-default);
+}
+
+/* ---------- 4.6 FORMS & CONTROLS ---------------------------------------- */
+input,
+select {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  font: inherit;
+  outline: none;
+}
+input:focus,
+select:focus { border-color: var(--accent-primary); }
+
+button {
+  background: var(--accent-primary); color: var(--bg-canvas);
+  font-weight: var(--fw-semibold); border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer; font: inherit;
+}
+button:hover { filter: brightness(1.1); }
+button:disabled { opacity: 0.5; cursor: default; }
+
+.ghost-btn {
+  background: transparent; color: var(--accent-primary);
+  border: 1px solid var(--accent-primary);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer; font: inherit;
+  font-weight: var(--fw-medium);
+}
+.ghost-btn:hover { background: color-mix(in srgb, var(--accent-primary) 8%, transparent); }
+
+.check {
+  display: flex; align-items: center; gap: var(--space-1);
+  color: var(--text-muted); font-size: var(--fs-12);
+}
+.check input { width: auto; }
+
+.form-grid { display: flex; gap: var(--space-2); flex-wrap: wrap; margin: var(--space-2) 0; }
+.form-grid input, .form-grid select { flex: 1; min-width: 140px; }
+.form-grid.rule-row input, .form-grid.rule-row select { min-width: 110px; }
+.form-row { display: flex; gap: var(--space-2); justify-content: flex-end; margin-top: var(--space-2); }
+.row-actions { white-space: nowrap; }
+
+/* ---------- 4.7 MODAL / DRAWER · Т3 извежда компонент + Toast ---------- */
+.modal-back {
+  position: fixed; inset: 0;
+  background: color-mix(in srgb, var(--bg-canvas) 72%, transparent);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 10; padding: var(--space-6);
+}
+.modal {
+  width: 720px; max-width: 100%; max-height: 85vh; overflow: auto;
+  display: flex; flex-direction: column; gap: var(--space-3);
+  background: var(--bg-surface); border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg); padding: var(--space-4);
+}
+.modal h2 { margin: 0 0 var(--space-1); }
+.modal input { width: 100%; }
+
+/* ==========================================================================
+   4.7 MODAL / DRAWER · подблок Т3 — Modal/Drawer с focus trap (В2)
+      Визуално 1:1 с легаси .modal-back/.modal (Т1), но като компонентни
+      класове; drawer е страничен вариант (Т11 детайл на възел). Без сенки —
+      разделението е чрез фона-завеса и 1px граница.
+   ========================================================================== */
+
+.mg-modal-back {
+  position: fixed;
+  inset: 0;
+  z-index: 10; /* над панел в цял екран (8) и топбар (5) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  background: color-mix(in srgb, var(--bg-canvas) 72%, transparent);
+}
+.mg-modal {
+  display: flex;
+  flex-direction: column;
+  width: 720px; /* легаси размерът на .modal (Т1) */
+  max-width: 100%;
+  max-height: 85vh;
+  min-height: 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg); /* модал → 12px */
+}
+
+.mg-drawer-back {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  background: color-mix(in srgb, var(--bg-canvas) 72%, transparent);
+}
+.mg-drawer-back--right { justify-content: flex-end; }
+.mg-drawer-back--left  { justify-content: flex-start; }
+.mg-drawer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 480px;
+  max-width: 100vw;
+  min-height: 0;
+  background: var(--bg-surface);
+  border-left: 1px solid var(--border-default); /* ръб вместо сянка */
+}
+.mg-drawer--left {
+  border-left: none;
+  border-right: 1px solid var(--border-default);
+}
+/* мобилно/tablet: drawer на цял екран (width идва inline от проп-а →
+   !important е единственият начин да го победим от CSS) */
+@media (max-width: 900px) {
+  .mg-drawer {
+    width: 100vw !important;
+    border-left: none;
+    border-right: none;
+  }
+}
+
+/* вътрешна структура — обща за модал и drawer */
+.mg-dialog__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4) var(--space-2);
+}
+.mg-dialog__title {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere; /* дълъг topic като заглавие */
+}
+.mg-dialog__title.mono {
+  font-size: var(--fs-15); /* mono заглавие: 15px, не 13 — носещо е */
+}
+.mg-dialog__body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 0 var(--space-4);
+}
+.mg-dialog__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+}
+
+/* ---------- 4.8 FEEDBACK · empty / error / ok / banner; Т3 Toast
+                замества inline .error при действия ------------------------ */
+.empty {
+  color: var(--text-muted);
+  padding: var(--space-6); text-align: center;
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-md);
+}
+.error {
+  color: var(--status-danger);
+  background: color-mix(in srgb, var(--status-danger) 8%, transparent);
+  border: 1px solid var(--status-danger);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  margin: var(--space-2) 0;
+}
+.ok-box {
+  color: var(--status-success);
+  background: color-mix(in srgb, var(--status-success) 8%, transparent);
+  border: 1px solid var(--status-success);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  margin: var(--space-2) 0;
+}
+.banner {
+  background: color-mix(in srgb, var(--status-warning) 12%, transparent);
+  color: var(--status-warning);
+  border-bottom: 1px solid var(--status-warning);
+  padding: var(--space-2) var(--space-6);
+  display: flex; align-items: center; gap: var(--space-3);
+  font-size: var(--fs-13);
+}
+.banner button { padding: var(--space-1) var(--space-3); font-size: var(--fs-12); }
+
+/* ==========================================================================
+   4.8 FEEDBACK · подблок Т3 — Toast стек + LiveIndicator (В2)
+      Toast-ът е ПЛЪТЕН (тинтът е mix-нат ВЪРХУ --bg-surface, не с
+      transparent — контрастът не зависи от това какво свети отдолу).
+      Live: точка + етикет; пулс = разширяващ се ринг (transform/opacity,
+      НЕ сянка), САМО при свържи данни + live състояние.
+   ========================================================================== */
+
+/* --- Toast контейнер: fixed долу вдясно, НАД модалите (z 20 > 10) --- */
+.mg-toasts {
+  position: fixed;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: min(380px, calc(100vw - 2 * var(--space-4)));
+  pointer-events: none; /* контейнерът не блокира клика; самите карти — да */
+}
+.mg-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  animation: mg-toast-in 150ms ease-out;
+}
+@keyframes mg-toast-in {
+  from { opacity: 0; transform: translateY(var(--space-2)); }
+  to   { opacity: 1; transform: none; }
+}
+
+.mg-toast__icon {
+  flex: none;
+  line-height: var(--lh-base);
+  font-weight: var(--fw-semibold);
+}
+.mg-toast__content {
+  flex: 1;
+  min-width: 0;
+}
+.mg-toast__title {
+  font-size: var(--fs-12);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 2px;
+}
+.mg-toast__msg {
+  font-size: var(--fs-13);
+  line-height: var(--lh-base);
+  overflow-wrap: anywhere;
+}
+.mg-toast__action {
+  flex: none;
+  background: transparent; /* отменя глобалния accent `button` */
+  color: var(--accent-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+}
+.mg-toast__action:hover {
+  filter: none;
+  border-color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
+}
+.mg-toast__close {
+  flex: none;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: var(--space-1);
+  font-size: var(--fs-13);
+  line-height: var(--lh-tight);
+  cursor: pointer;
+}
+.mg-toast__close:hover {
+  filter: none;
+  color: var(--text-primary);
+}
+
+/* тонове: иконата + заглавието носят тона; фонът е ПЛЪТЕН тинт 8% върху
+   --bg-surface (числата в notes.md §Контраст) */
+.mg-toast--success {
+  background: color-mix(in srgb, var(--status-success) 8%, var(--bg-surface));
+  border-color: var(--status-success);
+}
+.mg-toast--success .mg-toast__icon,
+.mg-toast--success .mg-toast__title { color: var(--status-success); }
+
+.mg-toast--warning {
+  background: color-mix(in srgb, var(--status-warning) 8%, var(--bg-surface));
+  border-color: var(--status-warning);
+}
+.mg-toast--warning .mg-toast__icon,
+.mg-toast--warning .mg-toast__title { color: var(--status-warning); }
+
+.mg-toast--danger {
+  background: color-mix(in srgb, var(--status-danger) 8%, var(--bg-surface));
+  border-color: var(--status-danger);
+}
+.mg-toast--danger .mg-toast__icon,
+.mg-toast--danger .mg-toast__title { color: var(--status-danger); }
+
+.mg-toast--info {
+  background: color-mix(in srgb, var(--status-info) 8%, var(--bg-surface));
+  border-color: var(--status-info);
+}
+.mg-toast--info .mg-toast__icon,
+.mg-toast--info .mg-toast__title { color: var(--status-info); }
+
+/* --- LiveIndicator: жив / спрял / свързва се --- */
+.mg-live {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+.mg-live--compact {
+  gap: var(--space-1);
+}
+.mg-live__dot {
+  position: relative;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.mg-live__label {
+  white-space: nowrap;
+}
+
+.mg-live--live      { color: var(--status-success); }
+.mg-live--reconnect { color: var(--status-warning); }
+.mg-live--idle      { color: var(--text-muted); }
+/* спрял поток → КУХА точка (без запълване): „има индикатор, няма ток" */
+.mg-live--idle .mg-live__dot {
+  background: transparent;
+  border: 1px solid currentColor;
+}
+
+/* пулс: разширяващ се ринг около точката — САМО когато модификаторът е
+   сложен (pulsing && state==='live' в LiveIndicator). Без сянка, без
+   безкраен idle миг — правилото „пулсира само при нови данни" */
+.mg-live__dot--pulse::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  animation: mg-live-ping 1.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes mg-live-ping {
+  from { transform: scale(1);   opacity: 0.9; }
+  to   { transform: scale(2.4); opacity: 0; }
+}
+
+/* достъпност: без анимация при reduced motion — състоянието се чете от
+   текста (LIVE/СПРЯН/СВЪРЗВАНЕ…), не от движението */
+@media (prefers-reduced-motion: reduce) {
+  .mg-toast { animation: none; }
+  .mg-live__dot--pulse::before { animation: none; opacity: 0.45; }
+}
+
+/* ---------- 4.9 CODE · hex дъмпове и сурови payload-и ------------------- */
+pre {
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  overflow: auto; max-height: 180px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-12);
+  line-height: var(--lh-base);
+}
+.hex {
+  color: var(--status-info);
+  font-family: var(--font-mono);
+  font-size: var(--fs-12);
+  word-break: break-all;
+}
+
+/* ---------- 4.10 LOGIN --------------------------------------------------- */
+.login {
+  width: 340px;
+  display: flex; flex-direction: column; gap: var(--space-3);
+}
+.login h1 {
+  margin: 0;
+  display: flex; align-items: center; gap: var(--space-2);
+}
+.login p { margin: calc(-1 * var(--space-1)) 0 var(--space-1); }
+
+@media (max-width: 800px) {
+  .topbar { flex-wrap: wrap; height: auto; padding: var(--space-3); }
+  main { padding: var(--space-3); }
+  /* топбарът тук е 2 реда с променлива височина — sticky главата на Т3
+     панела няма фиксиран отговорник (top:52px вече не е вярно) и минава
+     под него; на тесен екран панелите са на цялата ширина → статична глава */
+  .mg-panel__head { position: static; }
+}
+
+/* ---------- 4.11 DATA-VIZ · Т4 (съчетание В2+В1) -------------------------
+   Цветовете на мониторинговите екрани (Monitor/Devices/MapPage) слизат
+   от TSX тук. Статусните скали ползват САМО статусни токени (docs/16,
+   правило 7 — без нови статусни цветови токени). Променливите
+   --chan-0…9 и --viz-purple са КАТЕГОРНИ (визуализация на данни), не
+   статусни: живеят тук, докато собственикът не ги издигне в §1 TOKENS.
+   Интензитетът на пулса е чисто ЧИСЛО от JS: style с --a: 62 (процент
+   45–100). ВНИМАНИЕ: в коментари не се пише звездичка-наклонена —
+   урокът от Т1 (преждевременно затваряне на коментара). */
+:root {
+  --viz-purple: #B489E8;                 /* криптирано / публикувано правило */
+  --chan-0: #4AC9D8; --chan-1: #F0A848; --chan-2: #57C98A; --chan-3: #B489E8;
+  --chan-4: #E2504E; --chan-5: #A3C97F; --chan-6: #7BA6E8; --chan-7: #EBC17F;
+  --chan-8: #DB7A72; --chan-9: #5FBFC9;
+}
+
+/* -- спарклайн (Monitor: трафик по часове) -- */
+.mg-spark-stop { stop-color: var(--accent-primary); }
+.mg-spark-line { stroke: var(--accent-primary); }
+
+/* -- маркери на аномалии (Monitor): тонът е клас, не цвят -- */
+.mg-anom--danger  { stroke: var(--status-danger); }
+.mg-anom--accent  { stroke: var(--accent-primary); }
+.mg-anom--publish { stroke: var(--viz-purple); }
+.mg-anom--muted   { stroke: var(--text-muted); }
+.mg-tone--publish { color:  var(--viz-purple); }   /* легенда до графиката */
+
+/* -- ленти „Разпределение/Най-активни канали" (Monitor) -- */
+.mg-bar-track { flex: 1; height: 14px; border-radius: 4px; background: var(--bg-panel); }
+.mg-bar-fill  { height: 100%; border-radius: 4px; background: var(--accent-primary); }
+.mg-dist-bar  {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, var(--accent-primary), var(--status-info));
+}
+
+/* -- пулс клетки (Devices): геометрия в базите, цвят в модификаторите;
+     интензитетът е ЧИСЛО от JS: style={{ '--a': 62 }} (процент) -- */
+.mg-pulse-cell   { display: inline-block; width: 7px;  height: 14px; border-radius: 2px; }
+.mg-pulse-swatch { display: inline-block; width: 8px;  height: 10px; border-radius: 2px; }
+.mg-pulse-cell--clean {
+  background: color-mix(in srgb, var(--status-success) calc(var(--a, 45) * 1%), transparent); }
+.mg-pulse-cell--encrypted {
+  background: repeating-linear-gradient(45deg,
+    color-mix(in srgb, var(--viz-purple) calc(var(--a, 45) * 1%), transparent) 0,
+    color-mix(in srgb, var(--viz-purple) calc(var(--a, 45) * 1%), transparent) 2px,
+    color-mix(in srgb, var(--viz-purple) calc(var(--a, 45) * 0.3 * 1%), transparent) 2px,
+    color-mix(in srgb, var(--viz-purple) calc(var(--a, 45) * 0.3 * 1%), transparent) 4px); }
+.mg-pulse-cell--service {
+  background: color-mix(in srgb, var(--accent-primary) calc(var(--a, 45) * 1%), transparent); }
+.mg-pulse-cell--silent {
+  background: color-mix(in srgb, var(--text-muted) 16%, transparent);
+  outline: 1px solid color-mix(in srgb, var(--text-muted) 25%, transparent);
+  outline-offset: -1px; }
+
+/* -- SNR тоналност (MapPage: ребра, легенда, текст; 3-цветна по правило 7) -- */
+.mg-snr--good { color: var(--status-success); --edge-w: 2.5; }
+.mg-snr--mid  { color: var(--status-warning); --edge-w: 1.8; }
+.mg-snr--bad  { color: var(--status-danger);  --edge-w: 1.2; }
+.mg-snr--none { color: var(--text-muted);     --edge-w: 1;   }
+
+/* -- карта (MapPage): каналът е клас, формите пият currentColor -- */
+.mg-chan-0 { color: var(--chan-0); }
+.mg-chan-1 { color: var(--chan-1); }
+.mg-chan-2 { color: var(--chan-2); }
+.mg-chan-3 { color: var(--chan-3); }
+.mg-chan-4 { color: var(--chan-4); }
+.mg-chan-5 { color: var(--chan-5); }
+.mg-chan-6 { color: var(--chan-6); }
+.mg-chan-7 { color: var(--chan-7); }
+.mg-chan-8 { color: var(--chan-8); }
+.mg-chan-9 { color: var(--chan-9); }
+.mg-chan-none { color: var(--text-muted); }
+
+.mg-map-grid  { stroke: color-mix(in srgb, var(--accent-primary) 10%, transparent); }
+.mg-map-label { fill: var(--text-muted); }
+
+/* -- Т10: дуален режим (гео | схема) + stale ребра -- */
+.mg-map-mode {
+  display: inline-flex; border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm); overflow: hidden; flex: none;
+}
+.mg-map-mode button {
+  padding: 3px 14px; font-size: var(--fs-12); border: none; cursor: pointer;
+  background: transparent; color: var(--text-muted);
+}
+.mg-map-mode button.active {
+  background: var(--accent-primary); color: var(--bg-canvas);
+  font-weight: var(--fw-semibold);
+}
+.mg-edge--stale { stroke-dasharray: 4 4; }
+
+/* -- Т12: компонент Таблица — фиксирана глава, сортиране, филтър, колони -- */
+.mg-table { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.mg-table__bar { display: flex; align-items: center; gap: var(--space-2); }
+.mg-table__search {
+  flex: 1; max-width: 320px; padding: 6px 10px; font-size: var(--fs-12);
+  background: var(--bg-canvas); color: var(--text-primary);
+  border: 1px solid var(--border-default); border-radius: var(--radius-sm);
+}
+.mg-table__cols { position: relative; margin-left: auto; }
+.mg-table__colsmenu {
+  position: absolute; right: 0; top: calc(100% + 4px); z-index: 8;
+  background: var(--bg-panel); border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm); padding: var(--space-2);
+  display: flex; flex-direction: column; gap: 6px; min-width: 180px;
+}
+.mg-table__colsmenu label { font-size: var(--fs-12); display: flex; gap: 8px; align-items: center; cursor: pointer; }
+.mg-table__scroll { overflow: auto; max-height: 560px; }
+.mg-table__scroll table { width: 100%; border-collapse: collapse; }
+.mg-table__scroll thead th {
+  position: sticky; top: 0; z-index: 5;
+  background: var(--bg-panel); border-bottom: 1px solid var(--border-default);
+  padding: 8px 10px; text-align: left;
+}
+.mg-table__scroll.dense td { padding: 6px 10px; font-size: var(--fs-12); }
+.mg-table__scroll tbody tr { border-bottom: 1px solid color-mix(in srgb, var(--border-default) 55%, transparent); }
+.mg-table__scroll tbody tr:hover { background: color-mix(in srgb, var(--accent-primary) 5%, transparent); }
+.mg-table__sort {
+  background: none; border: none; padding: 0; cursor: pointer;
+  color: var(--text-muted); font-size: var(--fs-12); font-weight: var(--fw-semibold);
+}
+.mg-table__sort:hover, .mg-table__sort .on { color: var(--accent-primary); }
+
+/* -- Т11: детайлен панел на възел (до картата; <1000px drawer) + табове -- */
+.mg-map-layout { display: flex; gap: var(--space-3); align-items: stretch; }
+.mg-map-main { flex: 1; min-width: 0; }
+.mg-drawer {
+  flex: none; width: 340px; max-height: 640px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: var(--space-2);
+}
+.mg-drawer__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.mg-drawer__row { display: flex; flex-direction: column; padding: 4px 0; border-bottom: 1px solid var(--border-default); }
+.mg-drawer__row:last-of-type { border-bottom: none; }
+.mg-drawer__reserved { border: 1px dashed var(--border-default); border-radius: var(--radius-sm); padding: var(--space-2); text-align: center; margin-top: auto; }
+.mg-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border-default); }
+.mg-tabs button {
+  padding: 6px 12px; font-size: var(--fs-12); border: none; cursor: pointer;
+  background: transparent; color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+}
+.mg-tabs button.active { color: var(--accent-primary); border-bottom-color: var(--accent-primary); font-weight: var(--fw-semibold); }
+@media (max-width: 1000px) {
+  .mg-map-layout { flex-direction: column; }
+  .mg-drawer { width: 100%; max-height: 360px; }
+}
+
+.mg-edge      { stroke: currentColor; stroke-width: var(--edge-w, 1); }
+.mg-edge--hot { stroke-width: calc(var(--edge-w, 1) + 1.2); }
+.mg-snr-bar   { display: inline-block; width: 14px; height: 3px;  border-radius: 2px; background: currentColor; }
+.mg-chan-dot  { display: inline-block; width: 10px; height: 10px; border-radius: 5px; background: currentColor; }
+
+.mg-map-node               { fill: currentColor; }
+.mg-map-node__halo         { fill: currentColor; fill-opacity: 0.18; }
+.mg-map-node-label         { fill: var(--text-muted); }
+.mg-map-node-label--active { fill: currentColor; }
+
+/* -- 4.11 · RULE-VIZ + TOPIC-VIZ (Т5): pipeline диаграмите (R3.1 read-only
+   + R3.2 канвас — ЕДИН комплект класове за двете) и семантичните цветове
+   на Meshtastic темите (регион/канал/възел/шаблон/структура — система със
+   значения от R3.1, НЕ статусни). КАТЕГОРНИ променливи по модела на
+   --chan-N: живеят тук, докато собственикът не ги издигне в §1 TOKENS.
+   Структурните цветове (блок фон/текст/конектори) слизат към глобалните
+   токени — деликатна, документирана делта (docs/design/t5-variants). -- */
+:root {
+  --flow-src: #4AC9D8; --flow-cond: #F0A848;
+  --flow-transform: #B489E8; --flow-dst: #57C98A;
+  --tok-region: #4AC9D8; --tok-channel: #F0A848; --tok-device: #57C98A;
+  --tok-wildcard: #B489E8; --tok-sep: #9C8FA8;
+}
+/* тонът на блока върви на <g> през color; формите пият currentColor */
+.mg-kind-src       { color: var(--flow-src); }
+.mg-kind-cond      { color: var(--flow-cond); }
+.mg-kind-transform { color: var(--flow-transform); }
+.mg-kind-dst       { color: var(--flow-dst); }
+.mg-flow-box-rect  { fill: var(--bg-canvas); stroke: currentColor; }
+.mg-flow-title     { fill: currentColor; }
+.mg-flow-text      { fill: var(--text-primary); font-family: var(--font-mono); }
+.mg-flow-link-line   { stroke: var(--border-default); }
+.mg-flow-link-arrow  { fill: var(--border-default); }
+.mg-tok { font-family: var(--font-mono); }
+
+/* -- 4.12 DASHBOARD EXTRAS · Т9 (пончик + изпратени кофи) ------------------
+   Пончик: порциите са circle с stroke-dasharray (pathLength нормализира
+   обиколката); цветът идва от mg-chan-N (споделена палитра с картата).
+   Изпратени: стек от изпратени (акцент) + мъртви букви (danger) по 3ч. -- */
+.mg-donut { display: flex; gap: var(--space-4); align-items: center; flex-wrap: wrap; }
+.mg-donut__svg { width: 150px; height: 150px; flex: none; }
+.mg-donut__track { fill: none; stroke: var(--bg-panel); stroke-width: 16; }
+.mg-donut__seg  { fill: none; stroke: currentColor; stroke-width: 16; }
+.mg-donut__num  { fill: var(--text-primary); font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.mg-donut__cap  { fill: var(--text-muted); font-size: 11px; }
+.mg-donut__legend { display: flex; flex-direction: column; gap: 6px; min-width: 220px; flex: 1; }
+.mg-donut__row  { display: flex; align-items: center; gap: var(--space-2); }
+.mg-donut__name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.mg-sent { display: flex; align-items: flex-end; gap: 6px; min-height: 130px; padding-top: var(--space-2); }
+.mg-sent__col   { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; flex: 1; min-width: 0; }
+.mg-sent__stack { display: flex; flex-direction: column-reverse; width: 100%; max-width: 34px; }
+.mg-sent__ok    { background: color-mix(in srgb, var(--accent-primary) 60%, var(--bg-panel)); border-radius: var(--radius-sm) var(--radius-sm) 0 0; }
+.mg-sent__fail  { background: var(--status-danger); border-radius: var(--radius-sm) var(--radius-sm) 0 0; }
+.mg-sent__label { font-size: var(--fs-12); color: var(--text-muted); }
+
+/* ==========================================================================
+   5. UTILITIES — едноцелни класове; нищо ново не се добавя тук без
+      нужда от поне два потребителя.
+   ========================================================================== */
+.muted { color: var(--text-muted); }
+.small { font-size: var(--fs-12); }
+.deny { color: var(--status-danger); }
+.center {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh;
+}
+
+/* ==========================================================================
+   6. LEGACY ALIASES — старите 11 имена, още реферирани от 20 inline
+      var() в TSX (броени 2026-10-25: --line ×5, --muted ×5, --accent ×5,
+      --panel2 ×2, --ok ×2, --bad ×1). Т4/Т5 ги заместват с новите
+      токени; когато броячът стигне 0, секцията се трие (Т32).
+   ========================================================================== */
+:root {
+  --bg: var(--bg-canvas);          /* 1  употреба */
+  --panel: var(--bg-surface);      /* 4 употреби */
+  --panel2: var(--bg-panel);       /* 11 употреби */
+  --line: var(--border-default);   /* 19 употреби */
+  --text: var(--text-primary);     /* 6 употреби */
+  --muted: var(--text-muted);      /* 18 употреби */
+  --accent: var(--accent-primary); /* 17 употреби */
+  --accent2: var(--status-info);   /* 1 употреба */
+  --ok: var(--status-success);     /* 8 употреби */
+  --bad: var(--status-danger);     /* 8 употреби */
+  --warn: var(--status-warning);   /* 2 употреби */
+}
+
+/* ============================================================================
+ * Т28 Водопад + Т29 Ефир-часовник + Т30 Фунията (табове Време/Полезност) —
+ * само токени (Т4/Т5: нула hex в стиловете на екраните).
+ * ========================================================================== */
+
+/* --- Водопад: редове = връзки, колони = кофи ------------------------------ */
+.mg-wf { display: flex; flex-direction: column; gap: 3px; overflow-x: auto; }
+.mg-wf__row { display: flex; gap: 2px; align-items: center; }
+.mg-wf__label {
+  width: 230px; min-width: 230px; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; font-size: var(--fs-sm); color: var(--text-secondary);
+}
+.mg-wf__colhead {
+  flex: 1 0 0; min-width: 26px; text-align: center;
+  font-size: var(--fs-2xs); color: var(--text-muted);
+}
+.mg-wf__cell, .mg-wf__cell--empty {
+  flex: 1 0 0; min-width: 26px; height: 14px; border-radius: 3px;
+  background: var(--surface-deep);
+  opacity: var(--a, 0.15);
+}
+.mg-wf__cell { cursor: pointer; border: 1px solid transparent; }
+.mg-wf__cell:hover { border-color: var(--border-strong); opacity: 1; }
+.mg-wf__cell.mg-snr--good { background: var(--status-success); }
+.mg-wf__cell.mg-snr--mid { background: var(--status-warning); }
+.mg-wf__cell.mg-snr--bad { background: var(--status-danger); }
+.mg-wf__cell.mg-snr--none { background: var(--surface-raised); }
+/* щриховка „известна неизвестност" — криптирано, не тишина (Т28) */
+.mg-wf__cell--enc {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--surface-raised) 0 3px,
+    var(--text-muted) 3px 4.5px);
+  opacity: 0.85;
+}
+.mg-wf__demo { display: inline-block; width: 26px; height: 12px; vertical-align: middle; }
+
+/* --- Ефир-часовник: 7 (ден) × 24 (час) ------------------------------------ */
+.mg-afx { display: flex; flex-direction: column; gap: 3px; }
+.mg-afx__row { display: flex; gap: 2px; align-items: center; }
+.mg-afx__dow {
+  width: 26px; min-width: 26px; font-size: var(--fs-xs);
+  color: var(--text-secondary);
+}
+.mg-afx__cell {
+  flex: 1 0 0; height: 18px; border-radius: 3px; position: relative;
+  background: var(--surface-deep); opacity: var(--a, 0.12);
+}
+.mg-afx__cell.mg-snr--good { background: var(--status-success); }
+.mg-afx__cell.mg-snr--mid { background: var(--status-warning); }
+.mg-afx__cell.mg-snr--bad { background: var(--status-danger); }
+.mg-afx__cell.mg-snr--none { background: var(--surface-raised); }
+.mg-afx__hh {
+  position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%);
+  font-size: var(--fs-2xs); color: var(--text-muted);
+}
+.mg-afx__row:first-child { margin-bottom: 12px; }
+
+/* изводът на часовника („изпрати сега / по-добре в HH:00") */
+.mg-verdict {
+  padding: 8px 12px; border-left: 3px solid var(--status-warning);
+  background: var(--surface-raised); border-radius: 0 6px 6px 0;
+  margin-bottom: 10px; font-size: var(--fs-sm);
+}
+.mg-verdict--go { border-left-color: var(--status-success); }
+
+/* --- Фунията --------------------------------------------------------------- */
+.mg-fun { display: flex; flex-direction: column; gap: 8px; }
+.mg-fun__row {
+  display: flex; gap: 10px; align-items: center; width: 100%;
+  background: none; border: none; padding: 4px 6px; border-radius: 6px;
+  cursor: pointer; text-align: left; color: inherit;
+}
+.mg-fun__row:hover { background: var(--surface-raised); }
+.mg-fun__label { width: 110px; min-width: 110px; font-size: var(--fs-sm); }
+.mg-fun__track {
+  flex: 1; height: 16px; border-radius: 4px; overflow: hidden;
+  background: var(--surface-deep);
+}
+.mg-fun__bar {
+  display: block; height: 100%; border-radius: 4px;
+  background: var(--accent-primary); transition: width 0.3s ease;
+}
+.mg-fun__bar--bad { background: var(--status-danger); }
+.mg-fun__num { width: 90px; text-align: right; }
+.mg-fun__pct { width: 150px; min-width: 150px; text-align: right; }
+
+/* ============================================================================
+ * Т33 — Tablet responsive проход (перенареждане, не смаляване):
+ *  · sidebar до икони (≤1100px), етикетите остават за aria/title
+ *  · Dashboard 2 колони (не смаляване на 4-те карти)
+ *  · докосвания ≥ 40px по бутони/чипове
+ *  · canvas на Routing се скролва хоризонтално В СЕБЕ си (без страница-скрол)
+ * 845px се пази от съществуващите 800/900/1000 блокове — това е tablet поясът.
+ * ========================================================================== */
+@media (max-width: 1100px) {
+  /* sidebar → икони */
+  .sidebar { width: 64px; padding: var(--space-2) var(--space-1); }
+  .side-title { display: none; }
+  .side-btn { justify-content: center; padding: var(--space-2) 0; min-height: 40px; }
+  .side-btn__label { display: none; }
+
+  /* Dashboard: 2 колони */
+  .mg-card-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .dash-row { flex-direction: column; }
+  .dash-row__side { width: 100% !important; }
+
+  /* докосвания: бутони и чипове ≥ 40px височина */
+  .nav-btn, .mg-table__sort, .chip, button.ghost, .mg-tabs button {
+    min-height: 40px;
+  }
+  .mg-fun__row { min-height: 44px; }
+
+  /* canvas-и (RuleCanvas и др. широки SVG) се скролват в себе си */
+  .panel { max-width: 100%; overflow-x: hidden; }
+  .mg-wf, .mg-afx { overflow-x: auto; }
+
+  /* плътност: нищо под 12px на tablet */
+  .small { font-size: max(var(--fs-sm), 12px); }
+}
+
+
+/* ============================================================================
+ * Т34 Мъгла + Т35 Плейбек/геозони (Карта 2.0) — токени само
+ * ========================================================================== */
+.mg-fog__base { fill: var(--bg-canvas); opacity: 0.92; }
+.mg-fog__cell { stroke: var(--border-default); stroke-width: 0.3; }
+.mg-fog__cell--live { fill: var(--accent-primary); opacity: var(--a, 0.6); }
+.mg-fog__cell--memory { fill: var(--text-muted); opacity: calc(var(--a, 0.3) * 0.55); }
+.mg-zone { fill: var(--accent-primary); fill-opacity: 0.06; stroke: var(--accent-primary); stroke-width: 1.2; stroke-dasharray: 4 3; }
+.mg-play__dot { fill: var(--accent-primary); stroke: var(--bg-canvas); stroke-width: 1.5; }
+
+.mg-fog-note { color: var(--text-secondary); }
+
+
+/* ============================================================================
+ * WIDE / 4K проход (DES-1, ADR-дневник: жалобата „≥5 см празно от двете
+ * страни" на 1080p/4K). Стъпка 1: капак 1400px (беше 1200). Стъпка 2:
+ * >1600px → пълна ширина минус сайдбара. Стъпка 3: ≥2200px → капак 2240px
+ * за четимост; пространството отива в КОЛОНИ, не в разпънати панели.
+ * Блоковете са НАКРАЯ на файла, за да спечелят каскадата след max-width.
+ * ========================================================================== */
+:root {
+  --content-max: 1400px;
+  --gutter: var(--space-6);
+}
+main {
+  max-width: var(--content-max);
+  margin-inline: auto;
+}
+
+@media (min-width: 1601px) {
+  :root { --gutter: var(--space-8); }
+  main { max-width: none; }
+  .mg-map-layout .mg-drawer { width: 400px; }
+  .mg-map-main svg { width: 100%; height: auto; max-height: 76vh; }
+  .mg-table__search { max-width: 380px; }
+}
+
+@media (min-width: 2200px) {
+  main { max-width: 2240px; }
+  .mg-card-grid, .cards {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--space-4);
+  }
+  .dash-row { grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr); gap: var(--space-4); }
+  .mg-table__scroll { max-height: calc(100vh - 300px); }
+  .mg-wf__label { width: 280px; min-width: 280px; }
+  .mg-donut__svg { width: 180px; height: 180px; }
+  .mg-pulse-cell { width: 9px; }
+  .mg-pulse-swatch { width: 10px; }
+  /* 4K типография: ×~1.15 по скалата (всички текстове минават през --fs-*) */
+  :root {
+    --fs-12: 13.5px; --fs-13: 14.5px; --fs-14: 16px; --fs-15: 17px;
+    --fs-16: 18px; --fs-18: 20px; --fs-20: 22.5px; --fs-24: 27px;
+  }
+}

@@ -1,0 +1,438 @@
+/* MeshGate — Вариант 1 (фаза T1): минимална подмяна на дизайн-токени + self-hosted шрифтове.
+   База: apps/web/src/styles.css — всички имена на променливи и класове са запазени,
+   всички стари var() референции продължават да работят. Един файл, без @import:
+   @font-face блоковете са копирани от apps/web/public/fonts/fonts.css.
+   Пътя на шрифтовете (/fonts/*.woff2) е валиден спрямо apps/web/public/fonts/.
+   Бележки и diff: docs/design/t1-variants/variant-1-notes.md */
+
+/* ===== Self-hosted шрифтове (IBM Plex Sans 400/500/600 + JetBrains Mono 400/500) ===== */
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSans-400-cyrillic-ext.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSans-400-cyrillic.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSans-400-latin-ext.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSans-400-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSans-500-cyrillic-ext.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSans-500-cyrillic.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSans-500-latin-ext.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSans-500-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSans-600-cyrillic-ext.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSans-600-cyrillic.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSans-600-latin-ext.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSans-600-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/fonts/JetBrainsMono-400-cyrillic-ext.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/fonts/JetBrainsMono-400-cyrillic.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/fonts/JetBrainsMono-400-latin-ext.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/fonts/JetBrainsMono-400-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(/fonts/JetBrainsMono-500-cyrillic-ext.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(/fonts/JetBrainsMono-500-cyrillic.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(/fonts/JetBrainsMono-500-latin-ext.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(/fonts/JetBrainsMono-500-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ===== Дизайн-токени: Вариант 1 — стари имена, нови стойности ===== */
+:root {
+  /* цветове — имената са наследени от сегашния styles.css,
+     в коментар е новото semantic име от токен спецификацията */
+  --bg: #07131F;      /* bg-canvas — основен фон */
+  --panel: #0B1B2A;   /* bg-surface — карти / sidebar / topbar */
+  --panel2: #102437;  /* bg-panel — вложени панели, полета */
+  --line: #20394D;    /* border-default — тънки граници вместо сенки */
+  --text: #E6F0F7;    /* text-primary */
+  --muted: #91A8BA;   /* text-muted */
+  --accent: #22D3D9;  /* accent-primary — само активни действия / фокус */
+  --accent2: #63A9FF; /* status-info */
+  --ok: #35D49A;      /* status-success */
+  --bad: #FF626C;     /* status-danger */
+  --warn: #F5BE4F;    /* status-warning */
+
+  /* spacing — скала 4/8/12/16/24/32 (нови токени) */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+
+  /* radius — 4 chips/полета, 8 карти, 12 модали (нови токени) */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* типография (нови токени) */
+  --font-ui: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.45 var(--font-ui);
+}
+.mono { font-family: var(--font-mono); font-size: 13px; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.center { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+
+/* типографска скала за заглавия (само размер/тегло — без промяна на отстояния) */
+h1 { font-size: 24px; font-weight: 600; }
+h2 { font-size: 20px; font-weight: 600; }
+h3 { font-size: 16px; font-weight: 600; }
+
+.shell { display: flex; flex-direction: column; min-height: 100vh; }
+.topbar {
+  display: flex; align-items: center; gap: 24px;
+  padding: 0 20px; height: 52px;
+  background: var(--panel); border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; z-index: 5;
+}
+/* ляво меню (визията от docs/11): тело = странична лента + съдържание */
+.body { display: flex; flex: 1; min-height: 0; }
+.sidebar {
+  width: 220px; flex-shrink: 0; padding: 14px 10px;
+  background: var(--panel); border-right: 1px solid var(--line);
+  overflow-y: auto; position: sticky; top: 52px;
+  height: calc(100vh - 52px);
+}
+.side-section { margin-bottom: 14px; }
+.side-title {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px;
+  color: var(--muted); padding: 0 10px 4px; font-weight: 600;
+}
+.side-btn {
+  display: block; width: 100%; text-align: left;
+  background: transparent; color: var(--muted); border: none;
+  padding: 7px 10px; border-radius: 6px; cursor: pointer; font: inherit;
+  font-size: 13px;
+}
+.side-btn:hover { color: var(--text); background: var(--panel2); }
+.side-btn.active { color: var(--accent); background: var(--panel2); font-weight: 600; }
+.brand { font-weight: 600; font-size: 16px; letter-spacing: 0.4px; display: flex; align-items: center; gap: 8px; }
+.brand-mark { color: var(--accent); }
+.pill {
+  font-size: 11px; padding: 1px 8px; border-radius: 10px;
+  background: var(--panel2); color: var(--muted); border: 1px solid var(--line);
+}
+.nav { display: flex; gap: 4px; flex: 1; }
+.nav-btn {
+  background: transparent; color: var(--muted); border: none;
+  padding: 6px 12px; border-radius: 6px; cursor: pointer; font: inherit;
+}
+.nav-btn:hover { color: var(--text); background: var(--panel2); }
+.nav-btn.active { color: var(--accent); background: var(--panel2); }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+
+main { padding: 20px; max-width: 1200px; margin: 0 auto; width: 100%; }
+@media (max-width: 900px) {
+  .body { flex-direction: column; }
+  .sidebar {
+    width: 100%; height: auto; position: static;
+    display: flex; flex-wrap: wrap; gap: 4px; padding: 8px;
+    border-right: none; border-bottom: 1px solid var(--line);
+  }
+  .side-section { display: flex; gap: 4px; margin: 0; }
+  .side-title { display: none; }
+  .side-btn { width: auto; padding: 6px 10px; }
+}
+
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 18px; }
+.card {
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 10px; padding: 16px;
+}
+.stat-label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px; }
+.stat-value { font-size: 24px; margin-top: 4px; }
+.stat.ok .stat-value { color: var(--ok); }
+.stat.bad .stat-value { color: var(--bad); }
+.stat-sub { color: var(--muted); font-size: 12px; margin-top: 4px; }
+
+.panel {
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 10px; padding: 16px; margin-bottom: 16px;
+}
+.panel h2 { margin: 0 0 12px; font-size: 15px; font-weight: 500; }
+.panel h3 { font-size: 13px; color: var(--muted); margin: 14px 0 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.toolbar { display: flex; align-items: center; gap: 12px; }
+.toolbar h2 { margin: 0; flex: 0; }
+.toolbar input { flex: 1; }
+
+table { width: 100%; border-collapse: collapse; }
+th {
+  text-align: left; color: var(--muted); font-weight: 500; font-size: 12px;
+  padding: 6px 8px; border-bottom: 1px solid var(--line);
+  text-transform: uppercase; letter-spacing: 0.4px;
+}
+td { padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; font-size: 13px; }
+tr:hover td { background: rgba(34, 211, 217, 0.04); }
+.rowlink { cursor: pointer; }
+tr.selected td { background: rgba(99, 169, 255, 0.08); }
+.deny { color: var(--bad); }
+
+.tag {
+  font-size: 11px; padding: 1px 8px; border-radius: 9px;
+  background: var(--panel2); border: 1px solid var(--line); color: var(--muted);
+}
+.tag.ok { color: var(--ok); border-color: var(--ok); background: rgba(53, 212, 154, 0.08); }
+.tag.bad { color: var(--bad); border-color: var(--bad); background: rgba(255, 98, 108, 0.08); }
+.tag.ch { color: var(--accent); border-color: var(--accent); cursor: pointer; }
+
+/* чипове за фасетна филтрация (тип/канал/възел) в Packet Explorer */
+.chip {
+  font-size: 12px; padding: 3px 10px; border-radius: 12px;
+  background: var(--panel2); border: 1px solid var(--line); color: var(--text);
+  cursor: pointer;
+}
+.chip b { opacity: 0.75; font-weight: 600; margin-left: 2px; }
+.chip:hover { border-color: var(--accent); }
+.chip.active {
+  border-color: var(--accent); color: var(--accent);
+  background: rgba(34, 211, 217, 0.12);
+}
+
+.empty {
+  color: var(--muted); padding: 22px; text-align: center;
+  border: 1px dashed var(--line); border-radius: 8px;
+}
+.error {
+  color: var(--bad); background: rgba(255, 98, 108, 0.08);
+  border: 1px solid var(--bad); border-radius: 8px; padding: 8px 12px; margin: 8px 0;
+}
+
+input {
+  background: var(--panel2); border: 1px solid var(--line); color: var(--text);
+  border-radius: 6px; padding: 8px 10px; font: inherit; outline: none;
+}
+input:focus { border-color: var(--accent); }
+button {
+  background: var(--accent); color: var(--bg); font-weight: 600; border: none;
+  border-radius: 6px; padding: 8px 14px; cursor: pointer; font: inherit;
+}
+button:hover { filter: brightness(1.1); }
+button:disabled { opacity: 0.5; cursor: default; }
+
+.login { width: 340px; display: flex; flex-direction: column; gap: 12px; }
+.login h1 { margin: 0; font-size: 22px; }
+.login p { margin: -6px 0 6px; }
+
+pre {
+  background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+  padding: 10px; overflow: auto; max-height: 180px; font-size: 12px;
+  font-family: var(--font-mono);
+}
+.hex { color: var(--accent2); word-break: break-all; }
+
+.modal-back {
+  position: fixed; inset: 0; background: rgba(10, 12, 15, 0.7);
+  display: flex; align-items: center; justify-content: center; z-index: 10; padding: 20px;
+}
+.modal { width: 720px; max-width: 100%; max-height: 85vh; overflow: auto; display: flex; flex-direction: column; gap: 10px; }
+.modal h2 { margin: 0 0 4px; font-size: 15px; font-weight: 500; }
+.modal input { width: 100%; }
+
+.banner {
+  background: rgba(245, 190, 79, 0.12); color: var(--warn);
+  border-bottom: 1px solid var(--warn);
+  padding: 8px 20px; display: flex; align-items: center; gap: 12px; font-size: 13px;
+}
+.banner button { padding: 4px 12px; font-size: 12px; }
+
+.form-grid { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+.form-grid input, .form-grid select { flex: 1; min-width: 140px; }
+.form-grid.rule-row input, .form-grid.rule-row select { min-width: 110px; }
+.check { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
+.check input { width: auto; }
+.form-row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px; }
+
+.ok-box {
+  color: var(--ok); background: rgba(53, 212, 154, 0.08);
+  border: 1px solid var(--ok); border-radius: 8px; padding: 8px 12px; margin: 8px 0;
+}
+.ghost-btn {
+  background: transparent; color: var(--accent); border: 1px solid var(--accent);
+  border-radius: 6px; padding: 8px 14px; cursor: pointer; font: inherit; font-weight: 500;
+}
+.ghost-btn:hover { background: rgba(34, 211, 217, 0.08); }
+.nav-btn.ghost { color: var(--muted); }
+.nav-btn.danger { color: var(--bad); }
+.row-actions { white-space: nowrap; }
+select {
+  background: var(--panel2); border: 1px solid var(--line); color: var(--text);
+  border-radius: 6px; padding: 8px 10px; font: inherit;
+}
+
+@media (max-width: 800px) {
+  .topbar { flex-wrap: wrap; height: auto; padding: 10px; }
+  .nav { order: 3; width: 100%; overflow-x: auto; }
+  main { padding: 12px; }
+}

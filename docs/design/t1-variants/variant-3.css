@@ -1,0 +1,746 @@
+/* ==========================================================================
+   MeshGate — дизайн-система · Вариант 3 (фаза Т1)
+   „Токени + типографски компонентни класове"
+
+   Кандидат-замяна на apps/web/src/styles.css. Фокусът е типографията
+   като система: --fs-*/--lh-* скали + семантични текстови класове.
+   Файлът е СКЕЛЕТ: следващите фази ДОБАВЯТ в ясните секции, а не
+   пренаписват —
+     · Т3 (базови компоненти)  → добавя подблокове в секция 4 COMPONENTS
+     · Т6 (шел + аларми)       → разширява блока 4.1 SHELL
+     · Т9 (KPI Dashboard)      → консумира .metric-value/.metric-label/.kicker
+     · Т12 (Таблица)           → надгражда блока 4.4 TABLE
+
+   Правила на системата:
+     · тънки граници (1px var(--border-default)), БЕЗ сенки;
+     · нищо под 12px;
+     · JetBrains Mono (.mono) за Node ID / topic / packet id;
+     · полупрозрачни плочки чрез color-mix() от статусния токен —
+       нула дублирани hex стойности.
+
+   Секции:
+     0. FONTS            · @font-face, self-hosted (public/fonts)
+     1. TOKENS           · цветове, spacing, radius, шрифтове, --fs-*/--lh-*
+     2. BASE             · reset, body, фокус
+     3. TYPOGRAPHY       · типографска скала + семантични текстови класове
+     4. COMPONENTS       · shell / cards / panel / table / chips / forms /
+                           modal / feedback / code / login
+     5. UTILITIES        · едноцелни помощни класове
+     6. LEGACY ALIASES   · старите 11 имена на променливи → новите токени
+   ========================================================================== */
+
+/* ==========================================================================
+   0. FONTS — self-hosted, нула CDN заявки (офлайн Docker).
+      Копие на apps/web/public/fonts/fonts.css; двете места се държат
+      синхронно, докато styles.css стане единствен източник.
+   ========================================================================== */
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSans-400-cyrillic-ext.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSans-400-cyrillic.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSans-400-latin-ext.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSans-400-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSans-500-cyrillic-ext.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSans-500-cyrillic.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSans-500-latin-ext.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSans-500-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSans-600-cyrillic-ext.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSans-600-cyrillic.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSans-600-latin-ext.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(/fonts/IBMPlexSans-600-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/fonts/JetBrainsMono-400-cyrillic-ext.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/fonts/JetBrainsMono-400-cyrillic.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/fonts/JetBrainsMono-400-latin-ext.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/fonts/JetBrainsMono-400-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(/fonts/JetBrainsMono-500-cyrillic-ext.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(/fonts/JetBrainsMono-500-cyrillic.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(/fonts/JetBrainsMono-500-latin-ext.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(/fonts/JetBrainsMono-500-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ==========================================================================
+   1. TOKENS — единствено място с цветове/размери. Полупрозрачните
+      вариантите се извеждат с color-mix(), не с нови hex стойности.
+   ========================================================================== */
+:root {
+  /* --- цветове: фонове (дълбочина canvas → surface → panel) --- */
+  --bg-canvas: #07131F;
+  --bg-surface: #0B1B2A;
+  --bg-panel: #102437;
+
+  /* --- цветове: текст --- */
+  --text-primary: #E6F0F7;
+  --text-muted: #91A8BA;
+
+  /* --- цветове: граници (тънки 1px, вместо сенки) --- */
+  --border-default: #20394D;
+
+  /* --- цветове: акцент и статус --- */
+  --accent-primary: #22D3D9;
+  --status-success: #35D49A;
+  --status-warning: #F5BE4F;
+  --status-danger: #FF626C;
+  --status-info: #63A9FF;
+
+  /* --- spacing: 4 / 8 / 12 / 16 / 24 / 32 --- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* --- radius: 4 / 8 / 12 --- */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* --- шрифтове (self-hosted; --font-mono за Node ID / topic / packet id) --- */
+  --font-ui: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+
+  /* --- типографска скала: НИЩО ПОД 12px ---
+     12 таблици/чипове/labels · 13 плътно тяло+mono · 14 тяло ·
+     15 панелни заглавия (таван) · 16 бренд · 18 резервиран ·
+     20 заглавие на страница (под) · 24 metric/hero */
+  --fs-12: 12px;
+  --fs-13: 13px;
+  --fs-14: 14px;
+  --fs-15: 15px;
+  --fs-16: 16px;
+  --fs-18: 18px;
+  --fs-20: 20px;
+  --fs-24: 24px;
+
+  /* --- line-height скала --- */
+  --lh-tight: 1.3;   /* заглавия и цифри */
+  --lh-base: 1.45;   /* тяло по подразбиране */
+  --lh-loose: 1.6;   /* плътен текст на 12–13px */
+}
+
+/* ==========================================================================
+   2. BASE — reset и глобални елементи
+   ========================================================================== */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg-canvas);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--fs-14);
+  line-height: var(--lh-base);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* клавиатурен фокус — винаги видим (input-ите ползват border-color по-долу) */
+button:focus-visible,
+.side-btn:focus-visible,
+.nav-btn:focus-visible,
+.chip:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+::selection { background: var(--accent-primary); color: var(--bg-canvas); }
+
+/* ==========================================================================
+   3. TYPOGRAPHY — скалата като система.
+      Тази секция притежава ШРИФТОВИТЕ свойства (size/weight/lh/цветове
+      на текста); маржиновете и подредбата остават в COMPONENTS.
+      Нови семантични класове: .h-page .kicker .panel-title .metric-value
+      .metric-label .mono .text-muted-sm
+   ========================================================================== */
+
+/* -- 3.1 елементна мрежа: всяко заглавие е на скалата, нула изключения -- */
+h1, h2, h3, h4 { line-height: var(--lh-tight); }
+h1 { font-size: var(--fs-20); font-weight: var(--fw-semibold); }
+h2 { font-size: var(--fs-15); font-weight: var(--fw-semibold); }
+h3 { font-size: var(--fs-13); font-weight: var(--fw-medium); }
+h4 { font-size: var(--fs-13); font-weight: var(--fw-medium); }
+h1 { margin: 0 0 var(--space-4); }
+h2 { margin: var(--space-2) 0; }
+h3 { margin: var(--space-2) 0 var(--space-1); }
+
+/* -- 3.2 .h-page — заглавие на страница (20–24/600); консумират Т6/Т9 -- */
+.h-page,
+.login h1 {
+  font-size: var(--fs-20);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.2px;
+}
+.h-page { margin: 0 0 var(--space-4); }
+
+/* -- 3.3 .kicker — надзаглавие над .h-page (uppercase, акцент); Т9/Т27 -- */
+.kicker {
+  font-size: var(--fs-12);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--accent-primary);
+  margin: 0 0 var(--space-2);
+}
+
+/* -- 3.4 .panel-title — заглавие на панел (13–15/500) --
+      старите потребители (.panel h2 / .modal h2 / .toolbar h2) вече са
+      на същата рецепта — класът е готов за компонента Panel от Т3 */
+.panel-title,
+.panel h2,
+.modal h2,
+.toolbar h2 {
+  font-size: var(--fs-15);
+  font-weight: var(--fw-medium);
+}
+.panel-title { margin: 0 0 var(--space-3); }
+
+/* -- 3.5 .metric-value — голяма цифра с tabular-nums (не „танцува" при
+      live обновявания); KPI редът на Т9 и Card/Metric от Т3 -- */
+.metric-value,
+.stat-value {
+  font-size: var(--fs-24);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.2px;
+}
+
+/* -- 3.6 .metric-label — 12–13 muted uppercase с letterspacing -- */
+.metric-label,
+.stat-label {
+  font-size: var(--fs-12);
+  font-weight: var(--fw-medium);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+/* -- 3.7 .mono — JetBrains Mono за Node ID / topic / packet id;
+      13px (спрямо тяло 14), защото mono глифите текат по-широко -- */
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-13);
+  font-variant-numeric: tabular-nums;
+}
+
+/* -- 3.8 .text-muted-sm — каноничният „secondary text" (днес честият
+      комбо class="muted small", ~90 употреби) -- */
+.text-muted-sm {
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  line-height: var(--lh-loose);
+}
+
+/* ==========================================================================
+   4. COMPONENTS — всички UI класове. Подблоковете имат ясни граници,
+      за да ДОБАВЯТ следващите фази (Т3 компоненти, Т6 шел, Т12 таблица),
+      вместо да пренаписват.
+   ========================================================================== */
+
+/* ---------- 4.1 SHELL · топбар + sidebar + main · Т6 разширява тук
+                (брояч аларми, LIVE индикатор, сегменти с икони) ---------- */
+.shell { display: flex; flex-direction: column; min-height: 100vh; }
+
+.topbar {
+  display: flex; align-items: center; gap: var(--space-5);
+  padding: 0 var(--space-5); height: 52px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+  position: sticky; top: 0; z-index: 5;
+}
+/* ляво меню (визията от docs/11): тело = странична лента + съдържание */
+.body { display: flex; flex: 1; min-height: 0; }
+
+.sidebar {
+  width: 220px; flex-shrink: 0;
+  padding: var(--space-3) var(--space-2);
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-default);
+  overflow-y: auto; position: sticky; top: 52px;
+  height: calc(100vh - 52px);
+}
+.side-section { margin-bottom: var(--space-3); }
+.side-title {
+  font-size: var(--fs-12);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase; letter-spacing: 0.8px;
+  color: var(--text-muted);
+  padding: 0 var(--space-3) var(--space-1);
+}
+.side-btn {
+  display: block; width: 100%; text-align: left;
+  background: transparent; color: var(--text-muted); border: none;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md); cursor: pointer; font: inherit;
+  font-size: var(--fs-13);
+}
+.side-btn:hover { color: var(--text-primary); background: var(--bg-panel); }
+.side-btn.active {
+  color: var(--accent-primary); background: var(--bg-panel);
+  font-weight: var(--fw-semibold);
+}
+
+.brand {
+  display: flex; align-items: center; gap: var(--space-2);
+  font-size: var(--fs-16); font-weight: var(--fw-semibold);
+  letter-spacing: 0.4px;
+}
+.brand-mark { color: var(--accent-primary); }
+
+.pill {
+  font-size: var(--fs-12);
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-lg);
+  background: var(--bg-panel); color: var(--text-muted);
+  border: 1px solid var(--border-default);
+}
+
+.nav { display: flex; gap: var(--space-1); flex: 1; }
+.nav-btn {
+  background: transparent; color: var(--text-muted); border: none;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-md); cursor: pointer; font: inherit;
+}
+.nav-btn:hover { color: var(--text-primary); background: var(--bg-panel); }
+.nav-btn.active { color: var(--accent-primary); background: var(--bg-panel); }
+.nav-btn.ghost { color: var(--text-muted); }
+.nav-btn.danger { color: var(--status-danger); }
+.topbar-right { display: flex; align-items: center; gap: var(--space-3); }
+
+main { padding: var(--space-5); max-width: 1200px; margin: 0 auto; width: 100%; }
+
+@media (max-width: 900px) {
+  .body { flex-direction: column; }
+  .sidebar {
+    width: 100%; height: auto; position: static;
+    display: flex; flex-wrap: wrap; gap: var(--space-1);
+    padding: var(--space-2);
+    border-right: none; border-bottom: 1px solid var(--border-default);
+  }
+  .side-section { display: flex; gap: var(--space-1); margin: 0; }
+  .side-title { display: none; }
+  .side-btn { width: auto; padding: var(--space-1) var(--space-3); }
+}
+
+/* ---------- 4.2 CARDS & METRICS · Т3 Card/Metric и Т9 KPI ред
+                надграждат тук (еднаква височина, tone, контекст) ---------- */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default); /* тънка граница, БЕЗ сянка */
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+.stat-value { margin-top: var(--space-1); }
+.stat.ok .stat-value { color: var(--status-success); }
+.stat.bad .stat-value { color: var(--status-danger); }
+.stat-sub {
+  color: var(--text-muted);
+  font-size: var(--fs-12);
+  margin-top: var(--space-1);
+}
+
+/* ---------- 4.3 PANEL · контейнер със заглавие + действия;
+                Т3 добавя header/actions/fullscreen варианта ---------- */
+.panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default); /* тънка граница, БЕЗ сянка */
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+.panel h2 { margin: 0 0 var(--space-3); }
+.panel h3 {
+  font-size: var(--fs-12);
+  color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  margin: var(--space-3) 0 var(--space-1);
+}
+.toolbar { display: flex; align-items: center; gap: var(--space-3); }
+.toolbar h2 { margin: 0; flex: 0; }
+.toolbar input { flex: 1; }
+
+/* ---------- 4.4 TABLE · Т12 (компонент „Таблица") надгражда тук:
+                fixed header, сортиране, филтри, избор на колони ---------- */
+table { width: 100%; border-collapse: collapse; font-size: var(--fs-13); }
+th {
+  text-align: left; color: var(--text-muted);
+  font-size: var(--fs-12); font-weight: var(--fw-medium);
+  text-transform: uppercase; letter-spacing: 0.4px;
+  padding: var(--space-1) var(--space-2);
+  border-bottom: 1px solid var(--border-default);
+}
+td {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--border-default);
+  vertical-align: top;
+}
+tr:hover td { background: color-mix(in srgb, var(--accent-primary) 4%, transparent); }
+tr.selected td { background: color-mix(in srgb, var(--status-info) 8%, transparent); }
+.rowlink { cursor: pointer; }
+
+/* ---------- 4.5 TAGS & CHIPS · Т3 Status Chip и Т14 чипове-фасети ---------- */
+.tag {
+  font-size: var(--fs-12);
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-lg);
+  background: var(--bg-panel); color: var(--text-muted);
+  border: 1px solid var(--border-default);
+}
+.tag.ok {
+  color: var(--status-success); border-color: var(--status-success);
+  background: color-mix(in srgb, var(--status-success) 8%, transparent);
+}
+.tag.bad {
+  color: var(--status-danger); border-color: var(--status-danger);
+  background: color-mix(in srgb, var(--status-danger) 8%, transparent);
+}
+.tag.ch { color: var(--accent-primary); border-color: var(--accent-primary); cursor: pointer; }
+
+/* чипове за фасетна филтрация (тип/канал/възел) в Packet Explorer */
+.chip {
+  font-size: var(--fs-12);
+  padding: 3px var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--bg-panel); color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  cursor: pointer;
+}
+.chip b { opacity: 0.75; font-weight: var(--fw-semibold); margin-left: 2px; }
+.chip:hover { border-color: var(--accent-primary); }
+.chip.active {
+  border-color: var(--accent-primary); color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
+}
+
+/* ---------- 4.6 FORMS & CONTROLS ---------------------------------------- */
+input,
+select {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  font: inherit;
+  outline: none;
+}
+input:focus,
+select:focus { border-color: var(--accent-primary); }
+
+button {
+  background: var(--accent-primary); color: var(--bg-canvas);
+  font-weight: var(--fw-semibold); border: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer; font: inherit;
+}
+button:hover { filter: brightness(1.1); }
+button:disabled { opacity: 0.5; cursor: default; }
+
+.ghost-btn {
+  background: transparent; color: var(--accent-primary);
+  border: 1px solid var(--accent-primary);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer; font: inherit;
+  font-weight: var(--fw-medium);
+}
+.ghost-btn:hover { background: color-mix(in srgb, var(--accent-primary) 8%, transparent); }
+
+.check {
+  display: flex; align-items: center; gap: var(--space-1);
+  color: var(--text-muted); font-size: var(--fs-12);
+}
+.check input { width: auto; }
+
+.form-grid { display: flex; gap: var(--space-2); flex-wrap: wrap; margin: var(--space-2) 0; }
+.form-grid input, .form-grid select { flex: 1; min-width: 140px; }
+.form-grid.rule-row input, .form-grid.rule-row select { min-width: 110px; }
+.form-row { display: flex; gap: var(--space-2); justify-content: flex-end; margin-top: var(--space-2); }
+.row-actions { white-space: nowrap; }
+
+/* ---------- 4.7 MODAL / DRAWER · Т3 извежда компонент + Toast ---------- */
+.modal-back {
+  position: fixed; inset: 0;
+  background: color-mix(in srgb, var(--bg-canvas) 72%, transparent);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 10; padding: var(--space-5);
+}
+.modal {
+  width: 720px; max-width: 100%; max-height: 85vh; overflow: auto;
+  display: flex; flex-direction: column; gap: var(--space-3);
+}
+.modal h2 { margin: 0 0 var(--space-1); }
+.modal input { width: 100%; }
+
+/* ---------- 4.8 FEEDBACK · empty / error / ok / banner; Т3 Toast
+                замества inline .error при действия ------------------------ */
+.empty {
+  color: var(--text-muted);
+  padding: var(--space-5); text-align: center;
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-md);
+}
+.error {
+  color: var(--status-danger);
+  background: color-mix(in srgb, var(--status-danger) 8%, transparent);
+  border: 1px solid var(--status-danger);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  margin: var(--space-2) 0;
+}
+.ok-box {
+  color: var(--status-success);
+  background: color-mix(in srgb, var(--status-success) 8%, transparent);
+  border: 1px solid var(--status-success);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  margin: var(--space-2) 0;
+}
+.banner {
+  background: color-mix(in srgb, var(--status-warning) 12%, transparent);
+  color: var(--status-warning);
+  border-bottom: 1px solid var(--status-warning);
+  padding: var(--space-2) var(--space-5);
+  display: flex; align-items: center; gap: var(--space-3);
+  font-size: var(--fs-13);
+}
+.banner button { padding: var(--space-1) var(--space-3); font-size: var(--fs-12); }
+
+/* ---------- 4.9 CODE · hex дъмпове и сурови payload-и ------------------- */
+pre {
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  overflow: auto; max-height: 180px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-12);
+  line-height: var(--lh-base);
+}
+.hex {
+  color: var(--status-info);
+  font-family: var(--font-mono);
+  font-size: var(--fs-12);
+  word-break: break-all;
+}
+
+/* ---------- 4.10 LOGIN --------------------------------------------------- */
+.login {
+  width: 340px;
+  display: flex; flex-direction: column; gap: var(--space-3);
+}
+.login h1 { margin: 0; }
+.login p { margin: -6px 0 var(--space-1); }
+
+@media (max-width: 800px) {
+  .topbar { flex-wrap: wrap; height: auto; padding: var(--space-3); }
+  .nav { order: 3; width: 100%; overflow-x: auto; }
+  main { padding: var(--space-3); }
+}
+
+/* ==========================================================================
+   5. UTILITIES — едноцелни класове; нищо ново не се добавя тук без
+      нужда от поне два потребителя.
+   ========================================================================== */
+.muted { color: var(--text-muted); }
+.small { font-size: var(--fs-12); }
+.deny { color: var(--status-danger); }
+.center {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh;
+}
+
+/* ==========================================================================
+   6. LEGACY ALIASES — старите 11 имена, още реферирани от ~87 inline
+      var() в TSX (броени 2026-10-25). Т4/Т5 ги заместват с новите
+      токени; когато броячът стигне 0, секцията се трие (Т32).
+   ========================================================================== */
+:root {
+  --bg: var(--bg-canvas);          /* 1  употреба */
+  --panel: var(--bg-surface);      /* 4 употреби */
+  --panel2: var(--bg-panel);       /* 11 употреби */
+  --line: var(--border-default);   /* 19 употреби */
+  --text: var(--text-primary);     /* 6 употреби */
+  --muted: var(--text-muted);      /* 18 употреби */
+  --accent: var(--accent-primary); /* 17 употреби */
+  --accent2: var(--status-info);   /* 1 употреба */
+  --ok: var(--status-success);     /* 8 употреби */
+  --bad: var(--status-danger);     /* 8 употреби */
+  --warn: var(--status-warning);   /* 2 употреби */
+}

@@ -1,0 +1,32 @@
+<!--
+  T2 Вариант 3 — „Изцяло inline, без нови файлове"
+  Фрагмент за <head> на apps/web/index.html (сега там няма нито favicon,
+  нито theme-color → браузърът търси /favicon.ico на всяко отваряне).
+
+  Поставяне: двата реда по-долу се copy/paste-ват в index.html, в <head>.
+  Файлът тук е само артефакт за ревю — public/ НЕ се пипа.
+
+  data-URI favicon: минимизиран (един ред, без whitespace) символ-само SVG.
+  Кодиране: < → %3C, > → %3E, " → %22, # → %23, интервал → %20
+  (round-trip валидиран с decodeURIComponent; дължина 864 символа).
+  viewBox="25 12 188 188" = квадратен плотен кадър около символа
+  (съдържание x 29–209 / y 40–173, центрирано, лек отстъп от ръбовете).
+-->
+
+<meta name="theme-color" content="#07131F" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%2225%2012%20188%20188%22%3E%3Cpath%20d=%22M35%20166%20L102%2048%20L170%20166%22%20fill=%22none%22%20stroke=%22%2322D3D9%22%20stroke-width=%2212%22/%3E%3Cpath%20d=%22M73%20166%20L137%2058%20L202%20166%22%20fill=%22none%22%20stroke=%22%2322D3D9%22%20stroke-width=%2212%22/%3E%3Cpath%20d=%22M73%20119%20L48%20166%20M73%20119%20L102%20166%22%20fill=%22none%22%20stroke=%22%2322D3D9%22%20stroke-width=%224%22/%3E%3Ccircle%20cx=%22102%22%20cy=%2248%22%20r=%228%22%20fill=%22%2322D3D9%22/%3E%3Ccircle%20cx=%22137%22%20cy=%2258%22%20r=%227%22%20fill=%22%2322D3D9%22/%3E%3Ccircle%20cx=%2273%22%20cy=%22119%22%20r=%2210%22%20fill=%22%2322D3D9%22/%3E%3Ccircle%20cx=%22170%22%20cy=%22166%22%20r=%227%22%20fill=%22%2322D3D9%22/%3E%3Ccircle%20cx=%22202%22%20cy=%22166%22%20r=%227%22%20fill=%22%2322D3D9%22/%3E%3C/svg%3E" />
+
+<!--
+  Декодирано (за преглед — това е съдържанието на data-URI):
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="25 12 188 188">
+    <path d="M35 166 L102 48 L170 166" fill="none" stroke="#22D3D9" stroke-width="12"/>
+    <path d="M73 166 L137 58 L202 166" fill="none" stroke="#22D3D9" stroke-width="12"/>
+    <path d="M73 119 L48 166 M73 119 L102 166" fill="none" stroke="#22D3D9" stroke-width="4"/>
+    <circle cx="102" cy="48" r="8" fill="#22D3D9"/>
+    <circle cx="137" cy="58" r="7" fill="#22D3D9"/>
+    <circle cx="73" cy="119" r="10" fill="#22D3D9"/>
+    <circle cx="170" cy="166" r="7" fill="#22D3D9"/>
+    <circle cx="202" cy="166" r="7" fill="#22D3D9"/>
+  </svg>
+  theme-color #07131F = --bg-canvas от styles.css.
+-->

@@ -1,0 +1,15 @@
+# Зафиксирани версии — причината за всяка зависимост е в docs/01-architecture.md и ADR-тата.
+fastapi==0.115.6
+uvicorn==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.1
+asyncpg==0.30.0
+aiomqtt==2.3.2
+httpx==0.28.1
+argon2-cffi==23.1.0
+# Т36 срез 2 (ADR-007): AES-CTR декрипция на Meshtastic PSK канали
+cryptography==44.0.2
+# тестове (в dev образа, за да се пускат в контейнера)
+pytest==8.3.4
+pytest-asyncio==0.25.2
+websockets==14.1

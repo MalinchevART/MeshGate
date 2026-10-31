@@ -1,0 +1,179 @@
+# MeshGate stack — built by the N&M Control team.
+name: meshgate
+
+services:
+  traefik:
+    # v3.7.14 — актуалната v3 линия; v3.3 не разбира Docker Engine 29.x
+    image: traefik:v3.7.14
+    command: --configFile /etc/traefik/traefik.yml
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+    networks: [meshnet]
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  emqx:
+    build: ./emqx
+    environment:
+      # node името е по подразбиране (emqx@127.0.0.1) — emqx ctl/status трябва
+      # да може да пинга node-а отвътре; single-node MVP.
+      EMQX_NODE__COOKIE: meshgate-secret-cookie
+      # автентикация на MQTT клиентите (built-in DB, bootstrap от entrypoint-а)
+      EMQX_AUTHENTICATION__1__ENABLE: "true"
+      EMQX_AUTHENTICATION__1__MECHANISM: password_based
+      EMQX_AUTHENTICATION__1__BACKEND: built_in_database
+      EMQX_AUTHENTICATION__1__USER_ID_TYPE: username
+      EMQX_AUTHENTICATION__1__BOOTSTRAP_FILE: /opt/emqx/bootstrap/authn.json
+      # авторизация: permit по изрични правила, всичко останало — deny
+      EMQX_AUTHORIZATION__NO_MATCH: deny
+      EMQX_AUTHORIZATION__SOURCES: "[{type=built_in_database,enable=true}]"
+      # dashboard (само вътрешен; паролата се ползва от api adapter-а)
+      EMQX_DASHBOARD__DEFAULT_PASSWORD: ${EMQX_DASHBOARD_PASSWORD:?set in .env}
+      EMQX_INGEST_USER: ${EMQX_INGEST_USER:?set in .env}
+      EMQX_INGEST_PASSWORD: ${EMQX_INGEST_PASSWORD:?set in .env}
+    ports:
+      - "1883:1883"   # MQTT TCP — единственият публичен порт на брокера
+    volumes:
+      - emqx_data:/opt/emqx/data
+    networks: [meshnet]
+    healthcheck:
+      test: ["CMD", "emqx", "ctl", "status"]
+      interval: 10s
+      timeout: 20s
+      retries: 10
+      start_period: 45s
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16.9-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-meshgate}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-meshgate}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks: [meshnet]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-meshgate} -d ${POSTGRES_DB:-meshgate}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+    # порт 5432 НЕ се публикува — достъпен само в meshes мрежата
+
+  api:
+    build:
+      context: ../apps/api
+    environment:
+      # часовете на брифа/тишите часове са МЕСТНИ за оператора — без TZ
+      # контейнерът е UTC и digest_hour=8 звъни в 11:00 през лятото
+      TZ: ${TZ:-Europe/Sofia}
+      PGHOST: postgres
+      PGPORT: "5432"
+      PGUSER: ${POSTGRES_USER:-meshgate}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+      PGDATABASE: ${POSTGRES_DB:-meshgate}
+      MESHGATE_SECRET_KEY: ${MESHGATE_SECRET_KEY:?set in .env}
+      MESHGATE_ADMIN_USER: ${MESHGATE_ADMIN_USER:-admin}
+      MESHGATE_ADMIN_PASSWORD: ${MESHGATE_ADMIN_PASSWORD:?set in .env}
+      EMQX_HOST: emqx
+      EMQX_API_PORT: "18083"
+      EMQX_DASHBOARD_USER: admin
+      EMQX_DASHBOARD_PASSWORD: ${EMQX_DASHBOARD_PASSWORD:?set in .env}
+      EMQX_INGEST_USER: ${EMQX_INGEST_USER:?set in .env}
+      EMQX_INGEST_PASSWORD: ${EMQX_INGEST_PASSWORD:?set in .env}
+      RETENTION_PACKETS_RAW: ${RETENTION_PACKETS_RAW:-14}
+      RETENTION_EVENTS: ${RETENTION_EVENTS:-365}
+      # Т7: цикъл на критичния evaluator (тест профилът го смъква до 2s)
+      CRITICAL_TICK_S: ${CRITICAL_TICK_S:-30}
+      # SMTP за имейл известия (Фаза 5; празен host = имейл каналите дават грешка)
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      # демо емулатор: api подготвя MQTT потребителя му при старт
+      MESHGATE_EMULATOR_USER: ${MESHGATE_EMULATOR_USER:-}
+      MESHGATE_EMULATOR_PASSWORD: ${MESHGATE_EMULATOR_PASSWORD:-}
+      # интеграционните тестове споделят 127.0.0.1 и влизат многократно;
+      # 120/min/IP остава защита срещу brute-force отвън
+      MESHGATE_LOGIN_MAX: ${MESHGATE_LOGIN_MAX:-120}
+    networks: [meshnet]
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.api.rule=PathPrefix(`/api`)
+      - traefik.http.routers.api.entrypoints=web
+      - traefik.http.services.api.loadbalancer.server.port=8000
+      - traefik.http.middlewares.stripprefix.stripprefix.prefixes=/api
+      - traefik.http.routers.api.middlewares=stripprefix
+    depends_on:
+      postgres:
+        condition: service_healthy
+      emqx:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx;httpx.get('http://127.0.0.1:8000/v1/system/health',timeout=5).raise_for_status()"]
+      interval: 15s
+      timeout: 8s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ../apps/web
+    networks: [meshnet]
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.web.rule=PathPrefix(`/`)
+      - traefik.http.routers.web.entrypoints=web
+      - traefik.http.services.web.loadbalancer.server.port=80
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # "Външен" брокер за тестове на bridge engine-а (checklist §8, §10).
+  # Стартира се само с профил: docker compose --profile test up -d
+  remote-broker:
+    image: eclipse-mosquitto:2.0.20
+    command: mosquitto -c /mosquitto-no-auth.conf
+    networks: [meshnet]
+    profiles: ["test"]
+    restart: unless-stopped
+
+  # Демо емулатор на възли (телеметрия/позиции/съобщения в mesh/emul/#).
+  # Стартира се с профил: docker compose --profile demo up -d emulator
+  emulator:
+    build: ../tools/emulator
+    environment:
+      EMQX_HOST: emqx
+      EMU_USER: ${MESHGATE_EMULATOR_USER:-meshgate-emulator}
+      EMU_PASS: ${MESHGATE_EMULATOR_PASSWORD:?set in .env}
+      EMULATOR_NODES: ${EMULATOR_NODES:-6}
+      EMULATOR_INTERVAL: ${EMULATOR_INTERVAL:-5}
+      # v2: meshtastic-режим по подразбиране (msh/ теми + JSON envelope);
+      # legacy = старият generic поток върху mesh/emul/…
+      EMULATOR_MODE: ${EMULATOR_MODE:-meshtastic}
+    networks: [meshnet]
+    profiles: ["demo"]
+    depends_on:
+      emqx:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+networks:
+  meshnet:
+
+volumes:
+  pg_data:
+  emqx_data:

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="220" viewBox="0 0 900 220" role="img" aria-labelledby="mg-t mg-d">
+  <!-- MeshGate — пълен lockup (символ + wordmark + таглайн), 900x220 като фирменото лого.
+       Шрифт: „IBM Plex Sans, Arial" (НЕ Inter) — виж предупреждението долу.
+       ВАЖНО: като <img src="...svg"> SVG-ът е «sanitized» контекст и НЕ може да
+       зарежда уеб-шрифтове (нито self-hosted woff2). Wordmark-ът ще се рендира с
+       локално инсталиран IBM Plex Sans, а ако липсва — с Arial; таглайнът — с
+       системен monospace (JetBrains Mono е само първи избор по име).
+       Позициите на текстовете са възстановени по спецификацията 900x220 и може
+       да се наложи визуално калибриране ±10px след поглед в браузъра. -->
+  <title id="mg-t">MeshGate</title>
+  <desc id="mg-d">MeshGate — MQTT Gateway &amp; Management: MONITOR / MANAGE / CONNECT</desc>
+
+  <!-- Символ „Mesh Triangle" — дословни координати от източника (bbox x 29..209, y 40..173) -->
+  <g fill="none" stroke="#22D3D9">
+    <path d="M35 166 L102 48 L170 166" stroke-width="12"/>
+    <path d="M73 166 L137 58 L202 166" stroke-width="12"/>
+    <path d="M73 119 L48 166 M73 119 L102 166" stroke-width="4"/>
+  </g>
+  <g fill="#22D3D9">
+    <circle cx="102" cy="48" r="8"/>
+    <circle cx="137" cy="58" r="7"/>
+    <circle cx="73" cy="119" r="10"/>
+    <circle cx="170" cy="166" r="7"/>
+    <circle cx="202" cy="166" r="7"/>
+  </g>
+
+  <!-- Wordmark: 700; „Mesh" светло + „Gate" акцент -->
+  <text x="252" y="118" font-family="IBM Plex Sans, Arial, sans-serif" font-size="84" font-weight="700"><tspan fill="#F3F7FA">Mesh</tspan><tspan fill="#22D3D9">Gate</tspan></text>
+
+  <!-- Таглайн: моно, letter-spacing 2.2; xml:space="preserve" пази двойните интервали около наклонените черти -->
+  <text x="254" y="168" font-family="JetBrains Mono, Consolas, monospace" font-size="25" letter-spacing="2.2" fill="#D9E8F1" xml:space="preserve">MONITOR  /  MANAGE  /  CONNECT</text>
+</svg>

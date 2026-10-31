@@ -1,0 +1,19 @@
+<!-- MeshGate — Т2 Вариант 2: фрагмент за <head> на apps/web/index.html,
+     поставя се веднага след <title>MeshGate</title>.
+     Предварително условие: favicon.svg е копиран в apps/web/public/
+     (Vite сервира съдържанието на public/ от корена на сайта → /favicon.svg).
+
+     theme-color = --bg-canvas (#07131F): мобилните браузъри оцветяват
+     UI-рамката в цвета на приложението — тъмен като цялата станция. -->
+
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" sizes="any" />
+<meta name="theme-color" content="#07131F" />
+
+<!-- По избор, резерв за по-стари Safari/крайни случаи (не е част от минималния
+     вариант): генерирай PNG от същия символ и разкоментирай —
+     SVG favicon не се поддържа навсякъде преди ~2021, а apple-touch-icon
+     се ползва при „Добави към началния екран" в iOS:
+
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+-->

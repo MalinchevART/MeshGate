@@ -1,0 +1,311 @@
+MeshGate — UX/UI концепция и функционална спецификация на Routing Rules Editor
+Целта е MeshGate да предоставя визуално управление на MQTT трафика, без потребителят да е принуден да пише конфигурационни файлове или да програмира всяко правило ръчно.
+Бих проектирал редактора като част от професионална платформа за мрежово управление: тъмен графитен интерфейс, ясни статуси, класически технически икони, циан акцент за активния поток и зелено за успешно преминали проверки. Визуалният език трябва да е в духа на MeshGate, но с отделна идентичност за MeshGate.
+Основният принцип е:
+Избираш вход → задаваш условия → обработваш съобщението → избираш изход → тестваш → активираш.
+1. Основен екран на редактора
+  <<<КАРТИНКА rid=rId5>>>
+medium.com
+Интерфейсът трябва да бъде разделен на четири функционални зони.
+1. Лява лента — компоненти
+Списък с блокове за Source, Topic Filter, Condition, Transform, Router, Destination и Error Handler. Потребителят ги добавя към работния поток чрез drag-and-drop или чрез бутон за добавяне.
+2. Централно платно — Routing Flow
+Графично представяне на обработката. Връзките показват посоката на съобщенията, а разклоненията показват алтернативни маршрути. Възможни са zoom, pan, minimap и автоматично подреждане.
+3. Десен панел — Properties
+При избор на блок се показват неговите настройки. Например при Topic Filter — topic шаблони, включвания и изключвания; при Transform — JSON полета, операции и preview.
+4. Долен панел — Test & Execution
+Тестови съобщения, резултат от симулацията, преминати и непреминати условия, финален topic и payload, избрани дестинации и грешки.
+Горната лента трябва да съдържа името на правилото, неговия статус, Save Draft, Validate, Test, Publish и версията на конфигурацията. Publish трябва да активира проверената версия, а не да запазва директно всяка промяна в работещия маршрут.
+2. Структура на приложението и навигация
+Предлагам Routing Rules Editor да бъде отделен модул в основното MeshGate приложение, а не самостоятелна страница без връзка с останалата система.
+Dashboard
+Общо състояние на системата
+MQTT Brokers
+Локални и отдалечени брокери
+Bridges
+Връзки, посоки и topic subscriptions
+Routing Rules
+Правила, редактор и шаблони
+Automation
+Събития, действия и работни потоци
+Monitoring
+Трафик, история и статистика
+Integrations
+Meshtastic, MeshCore, Node-RED, Telegram
+Security & Settings
+Потребители, ACL, audit и настройки
+В секцията Routing Rules трябва да има четири основни изгледа:
+All Rules — таблица с всички правила, статус, приоритет, входове, изходи и статистика.
+Visual Editor — графично изграждане на маршрут.
+Rule Templates — готови шаблони за често срещани сценарии.
+Rule Groups — групиране на правила по проект, регион, брокер или функция.
+3. Визуалният редактор: компоненти и поведение
+Редакторът не трябва да бъде просто диаграма. Всеки визуален блок е реален конфигурационен обект с входове, изходи, валидация и собствено поведение.
+  <<<КАРТИНКА rid=rId7>>>
+Блок 1 — MQTT Source / Input Bridge
+Задава се източникът на съобщенията: брокер, bridge, gateway или интеграционен адаптер.
+Избор от вече конфигурираните брокери.
+Входни topics и статус на връзката.
+Идентификатор на източника.
+Филтриране още при абонамента, когато е възможно.
+Поведение при прекъсната връзка.
+Валидация: източникът трябва да съществува и да е разрешен за използване.
+  <<<КАРТИНКА rid=rId8>>>
+Блок 2 — Topic Filter
+Конфигурира кои MQTT topics са допустими за последваща обработка.
+Include patterns — списък с разрешени шаблони.
+Exclude patterns — списък с изключения.
+AND/OR между условията, когато има повече от едно.
+Тест с примерен topic.
+Броячи за match и reject.
+Пример: включи sensors/+/temperature/#, изключи sensors/test/#.
+  <<<КАРТИНКА rid=rId9>>>
+Блок 3 — Payload / Metadata Filter
+Проверява съдържанието на съобщението и наличните MQTT metadata.
+JSON поле и вложен път, например $.battery.
+Оператор: равно, различно, по-голямо, по-малко, съдържа.
+Проверка за съществуване на поле.
+Условия по source, QoS и retain flag.
+AND/OR групи.
+Обработка на невалиден JSON.
+Пример: $.battery < 20 AND $.type == "telemetry".
+  <<<КАРТИНКА rid=rId10>>>
+Блок 4 — Transform
+Извършва последователни преобразувания преди публикуването.
+Rename topic и добавяне/премахване на префикс.
+Добавяне, премахване и преименуване на JSON полета.
+Добавяне на timestamp и source ID.
+Промяна на формата на payload чрез поддържани трансформации.
+Preview на оригиналното и преобразуваното съобщение.
+Преобразуванията трябва да са подредени и да могат да се тестват поотделно.
+  <<<КАРТИНКА rid=rId11>>>
+Блок 5 — Router / Branch
+Разделя потока по условия или насочва едно съобщение към няколко дестинации.
+Match / No Match.
+Първо съвпадение или всички съвпадащи правила.
+Паралелно изпращане към няколко изхода.
+Отделни политики за грешка на всеки изход.
+Ясно зададена политика за fallback.
+  <<<КАРТИНКА rid=rId12>>>
+Блок 6 — Destination
+Определя къде ще бъде публикувано или записано съобщението.
+Друг MQTT брокер.
+Topic в същия брокер.
+Database или time-series storage.
+Webhook или notification adapter.
+QoS, retain, изходен topic и настройки за retry.
+Всяка дестинация трябва да има собствен статус и броячи за успешни и неуспешни операции.
+4. Детайлна спецификация на десния Properties панел
+Когато потребителят избере блок, десният панел трябва да се адаптира към неговия тип. Например Topic Filter ще има различни полета от Destination.
+Пример за настройка на Payload Filter:
+Payload Filter — Configuration
+Block name
+Payload format
+JSON
+Text
+Binary / decoded
+Conditions
+Condition 1
+JSONPath
+Field path
+OperatorLess than (<)
+Value
+Очакван тип: число
+Condition group logic
+ANDOR
+When payload cannot be parsed
+Reject message and log reason
+Route to error branch
+Stop processing and raise an error
+Condition preview
+$.battery < 20
+Съобщението продължава само ако стойността е валидно число и условието е изпълнено.
+Това е примерен интерактивен прототип на панела. В реалното приложение стойностите ще се съхраняват в конфигурацията на избрания блок, а не само във визуалния компонент.
+5. Test & Simulation — задължителна функционалност
+Това е една от най-важните функции на продукта. Потребителят трябва да може да провери правилото, преди да го активира върху реалния трафик.
+Предлагам долният панел да има четири таба:
+Test Message
+Входен topic, payload и metadata.
+Execution Trace
+Кои блокове са изпълнени и защо.
+Output Preview
+Финален topic и payload за всеки изход.
+Validation
+Конфигурационни грешки и предупреждения.
+Пример за тестово съобщение
+Вход:
+{
+"type": "telemetry",
+"battery": 15,
+"nodeId": "node-123",
+"temperature": 24.5
+}
+Topic:
+sensors/node-123/telemetry
+Правило:
+Topic съвпада с sensors/+/telemetry.
+Payload условието $.battery < 20 е изпълнено.
+Transform добавя source и receivedAt.
+Съобщението се изпраща към избрания MQTT destination.
+Очакваният резултат трябва да показва не само зелено „Success“, а и конкретно какво е станало на всеки етап. При отказ например:
+Topic Filter — Match.
+Payload Filter — No Match.
+Transform — Not executed.
+Destination — Not selected.
+Final result — Rejected by condition.
+Dry-run не трябва да публикува към реални дестинации. Реалното изпращане трябва да бъде отделна, изрично избрана операция.
+6. Функционална спецификация на routing engine
+Следната таблица може да се използва директно като основа за разработката.
+Функция
+Изискване
+Приоритет
+Избор на source
+Брокер, bridge или адаптер
+P0
+Topic matching
+MQTT wildcard-и, include/exclude
+P0
+Payload conditions
+JSON полета и оператори
+P0
+Transform
+Topic remapping и JSON операции
+P0
+Destination routing
+Един или множество изходи
+P0
+Validation
+Проверка преди активиране
+P0
+Simulation
+Входно съобщение и execution trace
+P0
+Persistent rules
+Съхранение и възстановяване след рестарт
+P0
+Versioning
+История и rollback
+P1
+Queue & retry
+Повторно изпращане и backpressure
+P1
+Rate limiting
+Лимити на правило и destination
+P1
+Deduplication
+Потискане на дубликати по ключ и прозорец
+P1
+Visual branching
+Условни разклонения и fallback
+P1
+Plugin blocks
+Добавяне на собствени блокове
+P2
+Schedule / time windows
+Правила според времето
+P2
+P0 — необходим за първа работеща версия; P1 — следващо разширение; P2 — усъвършенствани възможности.
+Правила за изпълнение
+Routing engine трябва да има детерминистично поведение:
+Получава съобщението и запазва оригиналния topic, payload и наличните metadata.
+Определя входния източник и идентификатора на съобщението, когато е наличен.
+Избира приложимите правила според source, приоритет и режим на изпълнение.
+Проверява условията и записва причината за всяко решение.
+Изпълнява разрешените трансформации в определен ред.
+Създава отделен резултат за всяка избрана дестинация.
+Изпраща съобщенията или ги поставя в съответната опашка.
+Записва резултатите, грешките и необходимите метрики.
+Необходимо е да се дефинира какво се случва при грешка в отделна дестинация. Ако една от две дестинации е недостъпна, не трябва автоматично да се приема, че успешно изпратеното съобщение към другата дестинация трябва да бъде изпратено повторно.
+7. Модел на данните
+Всяко правило трябва да се съхранява като версиониран структурен обект, независим от визуалното му представяне.
+Примерна концептуална конфигурация:
+{
+"id": "rule-battery-001",
+"name": "Low Battery Routing",
+"enabled": true,
+"priority": 10,
+"executionMode": "all_matches",
+"source": {
+"type": "mqtt_bridge",
+"id": "bridge-meshcore"
+},
+"conditions": {
+"topic": {
+"include": ["meshcore/+/telemetry/#"],
+"exclude": ["meshcore/test/#"]
+},
+"payload": {
+"format": "json",
+"all": [
+{
+"path": "$.battery",
+"operator": "lt",
+"value": 20
+}
+]
+}
+},
+"actions": [
+{
+"type": "add_fields",
+"fields": {
+"alertType": "low_battery"
+}
+}
+],
+"destinations": [
+{
+"id": "broker-central",
+"topicTemplate": "alerts/meshcore/${nodeId}",
+"qos": 1,
+"retain": false
+}
+],
+"errorPolicy": {
+"onInvalidPayload": "reject",
+"onDeliveryFailure": "retry"
+}
+}
+Това е примерна схема за проекта, а не готова конфигурация за директно зареждане в Mosquitto или EMQX. Преди реализация трябва да се уточнят типизацията на стойностите, допустимите изрази, escape правилата за template полетата и моделът за идентификация на съобщенията.
+8. Жизнен цикъл на правилото
+#chatgpt-mermaid-_r_v9_{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;fill:rgb(13, 13, 13);}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#chatgpt-mermaid-_r_v9_ .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-_r_v9_ .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-_r_v9_ .error-icon{fill:rgb(243, 243, 243);}#chatgpt-mermaid-_r_v9_ .error-text{fill:rgb(13, 13, 13);stroke:rgb(13, 13, 13);}#chatgpt-mermaid-_r_v9_ .edge-thickness-normal{stroke-width:1px;}#chatgpt-mermaid-_r_v9_ .edge-thickness-thick{stroke-width:3.5px;}#chatgpt-mermaid-_r_v9_ .edge-pattern-solid{stroke-dasharray:0;}#chatgpt-mermaid-_r_v9_ .edge-thickness-invisible{stroke-width:0;fill:none;}#chatgpt-mermaid-_r_v9_ .edge-pattern-dashed{stroke-dasharray:3;}#chatgpt-mermaid-_r_v9_ .edge-pattern-dotted{stroke-dasharray:2;}#chatgpt-mermaid-_r_v9_ .marker{fill:rgb(143, 143, 143);stroke:rgb(143, 143, 143);}#chatgpt-mermaid-_r_v9_ .marker.cross{stroke:rgb(143, 143, 143);}#chatgpt-mermaid-_r_v9_ svg{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;}#chatgpt-mermaid-_r_v9_ p{margin:0;}#chatgpt-mermaid-_r_v9_ .label{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";color:rgb(13, 13, 13);}#chatgpt-mermaid-_r_v9_ .cluster-label text{fill:rgb(13, 13, 13);}#chatgpt-mermaid-_r_v9_ .cluster-label span{color:rgb(13, 13, 13);}#chatgpt-mermaid-_r_v9_ .cluster-label span p{background-color:transparent;}#chatgpt-mermaid-_r_v9_ .label text,#chatgpt-mermaid-_r_v9_ span{fill:rgb(13, 13, 13);color:rgb(13, 13, 13);}#chatgpt-mermaid-_r_v9_ .node rect,#chatgpt-mermaid-_r_v9_ .node circle,#chatgpt-mermaid-_r_v9_ .node ellipse,#chatgpt-mermaid-_r_v9_ .node polygon,#chatgpt-mermaid-_r_v9_ .node path{fill:rgb(222, 234, 251);stroke:rgb(83, 154, 248);stroke-width:1px;}#chatgpt-mermaid-_r_v9_ .rough-node .label text,#chatgpt-mermaid-_r_v9_ .node .label text,#chatgpt-mermaid-_r_v9_ .image-shape .label,#chatgpt-mermaid-_r_v9_ .icon-shape .label{text-anchor:middle;}#chatgpt-mermaid-_r_v9_ .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#chatgpt-mermaid-_r_v9_ .rough-node .label,#chatgpt-mermaid-_r_v9_ .node .label,#chatgpt-mermaid-_r_v9_ .image-shape .label,#chatgpt-mermaid-_r_v9_ .icon-shape .label{text-align:center;}#chatgpt-mermaid-_r_v9_ .node.clickable{cursor:pointer;}#chatgpt-mermaid-_r_v9_ .root .anchor path{fill:rgb(143, 143, 143)!important;stroke-width:0;stroke:rgb(143, 143, 143);}#chatgpt-mermaid-_r_v9_ .arrowheadPath{fill:rgb(143, 143, 143);}#chatgpt-mermaid-_r_v9_ .edgePath .path{stroke:rgb(143, 143, 143);stroke-width:1px;}#chatgpt-mermaid-_r_v9_ .flowchart-link{stroke:rgb(143, 143, 143);fill:none;}#chatgpt-mermaid-_r_v9_ .edgeLabel{background-color:rgb(252, 252, 252);text-align:center;}#chatgpt-mermaid-_r_v9_ .edgeLabel p{background-color:rgb(252, 252, 252);}#chatgpt-mermaid-_r_v9_ .edgeLabel rect{opacity:0.5;background-color:rgb(252, 252, 252);fill:rgb(252, 252, 252);}#chatgpt-mermaid-_r_v9_ .labelBkg{background-color:rgba(252, 252, 252, 0.5);}#chatgpt-mermaid-_r_v9_ .cluster rect{fill:rgb(243, 243, 243);stroke:rgba(0, 0, 0, 0.1);stroke-width:1px;}#chatgpt-mermaid-_r_v9_ .cluster text{fill:rgb(13, 13, 13);}#chatgpt-mermaid-_r_v9_ .cluster span{color:rgb(13, 13, 13);}#chatgpt-mermaid-_r_v9_ div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:12px;background:rgb(243, 243, 243);border:1px solid rgba(0, 0, 0, 0.1);border-radius:2px;pointer-events:none;z-index:100;}#chatgpt-mermaid-_r_v9_ .flowchartTitleText{text-anchor:middle;font-size:18px;fill:rgb(13, 13, 13);}#chatgpt-mermaid-_r_v9_ rect.text{fill:none;stroke-width:0;}#chatgpt-mermaid-_r_v9_ .icon-shape,#chatgpt-mermaid-_r_v9_ .image-shape{background-color:rgb(252, 252, 252);text-align:center;}#chatgpt-mermaid-_r_v9_ .icon-shape p,#chatgpt-mermaid-_r_v9_ .image-shape p{background-color:rgb(252, 252, 252);padding:2px;}#chatgpt-mermaid-_r_v9_ .icon-shape .label rect,#chatgpt-mermaid-_r_v9_ .image-shape .label rect{opacity:0.5;background-color:rgb(252, 252, 252);fill:rgb(252, 252, 252);}#chatgpt-mermaid-_r_v9_ .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#chatgpt-mermaid-_r_v9_ .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#chatgpt-mermaid-_r_v9_ .node .neo-node{stroke:rgb(83, 154, 248);}#chatgpt-mermaid-_r_v9_ [data-look="neo"].node rect,#chatgpt-mermaid-_r_v9_ [data-look="neo"].cluster rect,#chatgpt-mermaid-_r_v9_ [data-look="neo"].node polygon{stroke:url(#chatgpt-mermaid-_r_v9_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-_r_v9_ [data-look="neo"].swimlane.cluster rect{filter:none;}#chatgpt-mermaid-_r_v9_ [data-look="neo"].node path{stroke:url(#chatgpt-mermaid-_r_v9_-gradient);stroke-width:1px;}#chatgpt-mermaid-_r_v9_ [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-_r_v9_ [data-look="neo"].node .neo-line path{stroke:rgb(83, 154, 248);filter:none;}#chatgpt-mermaid-_r_v9_ [data-look="neo"].node circle{stroke:url(#chatgpt-mermaid-_r_v9_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-_r_v9_ [data-look="neo"].node circle .state-start{fill:#000000;}#chatgpt-mermaid-_r_v9_ [data-look="neo"].icon-shape .icon{fill:url(#chatgpt-mermaid-_r_v9_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-_r_v9_ [data-look="neo"].icon-shape .icon-neo path{stroke:url(#chatgpt-mermaid-_r_v9_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-_r_v9_ .node text{font-size:14px;font-weight:600;letter-spacing:normal;fill:rgb(0, 79, 153);}#chatgpt-mermaid-_r_v9_ .edgeLabels text{font-size:13px;font-weight:600;letter-spacing:-0.08px;fill:rgb(0, 79, 153);}#chatgpt-mermaid-_r_v9_ .node tspan[font-weight="normal"],#chatgpt-mermaid-_r_v9_ .edgeLabels tspan[font-weight="normal"]{font-weight:600;}#chatgpt-mermaid-_r_v9_ .edgeLabel .label rect{opacity:1;rx:13px;ry:13px;fill:rgb(245, 250, 255);stroke:rgb(206, 219, 229);stroke-width:1px;}#chatgpt-mermaid-_r_v9_ .node rect,#chatgpt-mermaid-_r_v9_ .node circle,#chatgpt-mermaid-_r_v9_ .node ellipse,#chatgpt-mermaid-_r_v9_ .node polygon,#chatgpt-mermaid-_r_v9_ .node path{fill:rgb(229, 243, 255);stroke:rgba(0, 0, 0, 0.1);stroke-width:1px;}#chatgpt-mermaid-_r_v9_ .node rect{rx:16px;ry:16px;}#chatgpt-mermaid-_r_v9_ .node.mermaid-decision .label-container{fill:rgb(245, 250, 255);stroke:rgb(206, 219, 229);stroke-dasharray:2,2;}#chatgpt-mermaid-_r_v9_ .edgePaths .flowchart-link{stroke:rgb(143, 143, 143);stroke-width:1px;stroke-linecap:round;stroke-linejoin:round;}#chatgpt-mermaid-_r_v9_ .marker{fill:rgb(143, 143, 143);stroke:rgb(143, 143, 143);}#chatgpt-mermaid-_r_v9_ :root{--mermaid-font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";}Create RuleConfigure SourceAdd FiltersAdd TransformationsSelect DestinationsValidateFix ConfigurationSimulateSave DraftPublish VersionMonitor ExecutionError or Change?Disable or Roll BackErrorsValidUnexpected ResultExpected ResultErrorChangeNormal
+Publish трябва да представлява атомарна смяна към валидирана версия, доколкото архитектурата на брокера и приложението го позволява. Не бива да има междинно състояние, в което част от новото правило вече е активно, а друга част още не е приложена.
+9. Нефункционални изисквания
+Освен визуалния интерфейс, следните характеристики са задължителни за надеждна реализация.
+Performance: измерване на processing latency, съобщения в секунда и натоварване по правило.
+Scalability: асинхронна обработка и ограничени опашки; без блокиране на приемащия поток от бавен webhook.
+Persistence: конфигурациите и историята трябва да преживяват рестарт.
+Security: права за редактиране, публикуване и преглед на тайни; защитено съхранение на credentials.
+Observability: structured logs, execution trace, метрики и аларми.
+Reliability: backpressure, retry, dead-letter handling и loop prevention.
+Compatibility: MQTT 3.1.1/5.0 според възможностите на избрания брокер и адаптер.
+Usability: клавиатурна навигация, ясни съобщения за грешки и възможност за конфигуриране без писане на код.
+Необходимо е също да има лимити за размера на payload, сложността на условията и времето за изпълнение на трансформациите. Така един неправилно конфигуриран маршрут няма да блокира целия routing engine.
+10. Критерии за приемане на първата версия
+Преди да се счита за готов, модулът трябва да покрива следните сценарии:
+Създаване на правило от MQTT Broker A към Broker B.
+Филтриране по topic с + и #.
+Филтриране по JSON поле с числово и текстово условие.
+Изключване на topics чрез deny/exclude правила.
+Промяна на изходния topic и JSON payload.
+Препращане към две дестинации с различни topic mapping настройки.
+Симулиране без реално публикуване.
+Запазване на конфигурацията след рестарт.
+Обработка на прекъсната дестинация и повторно изпращане.
+Предотвратяване на цикли при двупосочно bridge-ване.
+Възможност за изключване и rollback на публикувано правило.
+Проверка на разрешенията: потребител без административни права не може да променя или активира правила.
+11. Препоръчителен план за реализация
+01
+Routing MVP
+Source, Topic Filter, Payload Filter, Transform, Destination, validation и simulation. Реална връзка между два MQTT брокера.
+02
+Operational Reliability
+Persistent configuration, логове, метрики, retries, queue limits, loop prevention и rollback.
+03
+Advanced Automation
+Условни разклонения, графични workflow-и, scheduled rules, deduplication, Node-RED и plugin API.
+04
+Mesh Integrations
+Специализирани адаптери за Meshtastic и MeshCore, декодиране на съобщения, routing по node ID, тип събитие и налични мрежови атрибути.
+Финална препоръка: за MeshGate бих избрал визуален графичен редактор с отделен инспектор на избрания блок, тестов панел и версиониране на конфигурацията. Не бих започвал с прекалено сложен универсален workflow builder. Първо трябва да е безупречна основната операция — входен bridge, филтриране, трансформация и един или повече изходи. След това върху същия engine могат да се изграждат по-сложните автоматизации, без да се променя фундаменталният модел.

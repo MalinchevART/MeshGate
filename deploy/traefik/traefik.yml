@@ -1,0 +1,14 @@
+# Traefik v3 — статична конфигурация (MVP: HTTP :80; TLS и ACME — при продукционно деплойване)
+entryPoints:
+  web:
+    address: ":80"
+
+providers:
+  docker:
+    exposedByDefault: false
+    network: meshgate_meshnet
+
+ping: {}
+
+log:
+  level: INFO
